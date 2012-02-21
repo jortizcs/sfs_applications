@@ -1,6 +1,7 @@
 package mobile.SFS;
 
 import android.app.Activity;
+import android.util.Log;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -24,8 +25,14 @@ public class MobileSFS extends Activity {
         
         TextView currLoc = (TextView) findViewById(R.id.currLoc);
         String s = extras == null ? null : extras.getString("curr_loc");
+        Log.i("MOBILE_SFS","s=" + s);
         final String currLocString = s == null ? DEFAULT_SPACE : s;
+        Log.i("MOBILE_SFS","currLocString=" + currLocString);
         currLoc.setText(currLocString);
+        if(extras==null){
+        	getIntent().putExtra("curr_loc", currLocString);
+        	Log.i("MOBILE_SFS", "Putting extras="+ currLocString);
+        }
         
         Button changeCurrLoc = (Button) findViewById(R.id.changeCurrLoc);
         changeCurrLoc.setOnClickListener(new OnClickListener() {
@@ -45,10 +52,14 @@ public class MobileSFS extends Activity {
         		Intent intent = null;
         		
 				switch(arg2) {
-					case 0: intent = new Intent(MobileSFS.this, UpdateHierarchy.class); break;
+					case 0: 
+						intent = new Intent(MobileSFS.this, UpdateHierarchy.class); 
+						intent.putExtra("curr_loc", currLocString);
+						break;
 					case 1: {//intent = new Intent(MobileSFS.this, ViewServices.class); break;
 						intent = new Intent("com.google.zxing.client.android.SCAN");
 		        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+		        		intent.putExtra("curr_loc", currLocString);
 		        		startActivityForResult(intent, 0);
 		        		break;
 					}
@@ -63,6 +74,8 @@ public class MobileSFS extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 			Intent next = new Intent(this, ViewServices.class);
 			next.putExtra("url", (intent.getStringExtra("SCAN_RESULT")));
+			TextView currLoc = (TextView) findViewById(R.id.currLoc);
+	        next.putExtra("curr_loc", currLoc.getText().toString());
 			startActivity(next);
 	}
 }

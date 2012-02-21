@@ -116,6 +116,19 @@ public class Util {
 		else
 			return null;
 	}
+	
+	public static JSONArray getIncidentPaths(String url){
+		Log.i("UTIL", "getting incident paths: " + url);
+		String respStr = getJsonString(url  + "?incident_paths=true");
+		try {
+			JSONObject obj = new JSONObject(respStr);
+			if(obj!=null && obj.has("paths"))
+				return obj.getJSONArray("paths");
+		} catch(Exception e){
+			Log.d("UTIL", "Problem getting incident paths");
+		}
+		return null;
+	}
 
 	public static JSONObject getProperties(String url) throws JSONException {
 		JSONObject json = new JSONObject(getJsonString(url));
