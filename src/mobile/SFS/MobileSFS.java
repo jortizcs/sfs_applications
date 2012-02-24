@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MobileSFS extends Activity {
 	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME + "/room1";
@@ -120,7 +121,7 @@ public class MobileSFS extends Activity {
         			//check that the location of this item matches the current location
         			String thispath = paths.getString(i).replace("\"", "");
         			if(thispath.startsWith(GlobalConstants.SPACESHOME)){
-        				String itemLocStr = Util.getLocation(qrcStr);
+        				String itemLocStr = Util.getLocationByQrc(qrcStr);
         				Log.i("VIEW_SERVICES", "thisIncidentPath[" + i + "]=" + paths.getString(i));
         				Log.i("VIEW_SERVICES", "LOCATION::" + itemLocStr);
         				StringTokenizer thisPathTokenizer = new StringTokenizer(thispath, "/");
@@ -149,6 +150,8 @@ public class MobileSFS extends Activity {
         							newLocBuf.append("/").append(thisPathTokVec.get(k));
         						currLoc_.setText(newLocBuf.toString());
         						next.putExtra("curr_loc", newLocBuf.toString());
+        						Toast.makeText(this, "Location changed to " + newLocBuf.toString(),
+        								 Toast.LENGTH_SHORT).show();
         					} else{
         						Log.i("VIEW_SERVICES", "Item is in same location as current setting");
         					}

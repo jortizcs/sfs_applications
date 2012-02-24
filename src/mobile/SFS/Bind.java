@@ -86,13 +86,26 @@ public class Bind extends Activity {
 							tokens.add(tokenizer.nextToken());
 						meterName = tokens.elementAt(tokens.size()-1);
 						
-						res = Util.createSymlink(itemUri, meterUri, host_);
-						Log.i("Bind", "creating symlink from qrc; " + itemUri + " to " + meterUri);
+						String itemLoc = Util.getLocationByUri(itemUri);
+						String meterLoc = Util.getLocationByUri(meterUri);
+						Log.i(Bind.class.getName(), "itemLoc=" + itemLoc + ", meterLoc=" + meterLoc);
+						
+						if(itemLoc.equals(meterLoc)){
+							res = Util.createSymlink(itemUri, meterUri, host_);
+							Log.i("Bind", "creating symlink from qrc; " + itemUri + " to " + meterUri);
+						} else {
+							Toast.makeText(Bind.this, 
+        							"Cannot attach items registered in different locations!", 
+        							Toast.LENGTH_LONG).show();
+						}
 					} catch(Exception e){
-						Log.i("Bind", "Exists? " + itemUri + "/" + meterName);
-						if(!Util.isExistingResource(host_ + itemUri + "/" + meterName)){
+						String itemuri=itemUri;
+						if(itemUri.endsWith("/"))
+							itemuri =itemUri.substring(0, itemUri.length()-1);
+						Log.i("Bind", "Exists? " + itemuri + "/" + meterName);
+						if(!Util.isExistingResource(host_ + itemuri + "/" + meterName)){
 							Log.i("Bind.onActivityResult", "Exists? NO");
-							Toast.makeText(getApplicationContext(), "Could not create:" + host_ + itemUri + "/" + meterName, 
+							Toast.makeText(getApplicationContext(), "Could not create:" + host_ + itemuri + "/" + meterName, 
 									Toast.LENGTH_LONG).show();
 							throw e;
 						}

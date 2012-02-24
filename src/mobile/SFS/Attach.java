@@ -66,15 +66,28 @@ public class Attach extends Activity {
 							tokens.add(tokenizer.nextToken());
 						nodeName = tokens.elementAt(tokens.size()-1);
 						
-        				res = Util.createSymlink(rootUri, nodeUri, host_);
-        				Log.i("Attach", "creating symlink from qrc; " + rootUri + 
-								" to " + nodeUri);
+						String rootLoc = Util.getLocationByUri(rootUri);
+						String nodeLoc = Util.getLocationByUri(nodeUri);
+						Log.i(Attach.class.getName(), "rootLoc=" + rootLoc + ", nodeLoc=" + nodeLoc);
+						
+        				if(rootLoc.equals(nodeLoc)){
+							res = Util.createSymlink(rootUri, nodeUri, host_);
+	        				Log.i("Attach", "creating symlink from qrc; " + rootUri + 
+									" to " + nodeUri);
+        				} else {
+        					Toast.makeText(Attach.this, 
+        							"Cannot attach items registered in different locations!", 
+        							Toast.LENGTH_LONG).show();
+        				}
 					} catch(Exception e){
-						Log.i("Attach", "Exists? " + rootUri + "/" + nodeName);
-						if(!Util.isExistingResource(host_ + rootUri + "/" + nodeName)){
+						String rooturi=rootUri;
+						if(rootUri.endsWith("/"))
+							rooturi =rootUri.substring(0, rootUri.length()-1);
+						Log.i("Attach", "Exists? " + rooturi + "/" + nodeName);
+						if(!Util.isExistingResource(host_ + rooturi + "/" + nodeName)){
 							Log.i("Attach", "Exists? NO");
 							Toast.makeText(getApplicationContext(), 
-									"Could not create:" + host_ + rootUri + "/" + nodeName, 
+									"Could not create:" + host_ + rooturi + "/" + nodeName, 
 									Toast.LENGTH_LONG).show();
 							throw e;
 						}

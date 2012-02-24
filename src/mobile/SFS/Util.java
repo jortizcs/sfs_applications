@@ -56,12 +56,16 @@ public class Util {
 	
 	//hostAndPort = "http://is4server.com:8083"
 	public static String createSymlink(String origin, String target, String hostAndPort) throws Exception, JSONException {
+		if(target.endsWith("/"))
+			target=target.substring(0, target.length()-1);
 		int i = target.lastIndexOf("/");
+		Log.i(Util.class.toString(), "target=" + target + ", i=" + i);
 		
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("operation", "create_symlink");
 		jsonObj.put("name", target.substring(i+1));
 		jsonObj.put("uri", target);
+		Log.i(Util.class.toString(), "Sending Request:: " + jsonObj.toString());
 		return CurlOps.put(jsonObj.toString(), hostAndPort + origin);
 	}
 	
@@ -148,7 +152,7 @@ public class Util {
 	 * @param qrc the qrc code path
 	 * @return the location of the item, if the item is placed somewhere, null otherwise.
 	 */
-	public static String getLocation(String qrc){
+	public static String getLocationByQrc(String qrc){
 		if(qrc != null){
 			try {
 				String itemPath = Util.getUriFromQrc(qrc);
@@ -199,6 +203,65 @@ public class Util {
 			} catch(Exception e){
 				e.printStackTrace();
 			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the location of the item pointed to by this qrc path.
+	 * 
+	 * @param qrc the qrc code path
+	 * @return the location of the item, if the item is placed somewhere, null otherwise.
+	 */
+	public static String getLocationByUri(String path){
+		try {
+			String itemPath = path;
+			if(itemPath!=null){
+				Log.i("UTIL", "itemPath=" + itemPath);
+				JSONArray incidentList = Util.getIncidentPaths(GlobalConstants.HOST + itemPath);
+				Log.i("UTIL", "incidentList=" + incidentList.toString().replace("\\",""));
+				for(int i=0; i<incidentList.length(); i++){
+					//check that the location of this item matches the current location
+	    			//String thispath = incidentList.getString(i).replace("\\", "");
+					String thispath = incidentList.getString(i);
+	    			
+	    			if(thispath.startsWith(GlobalConstants.SPACESHOME)){
+	    				Log.i("UTIL", "thispath=" + thispath + " starts with " + GlobalConstants.SPACESHOME);
+	    				//if it's has a space prefix, check that it's a space specifically
+	    				StringTokenizer thisPathTkzr = new StringTokenizer(thispath, "/");
+	    				Vector<String> thisPathTokVec = new Vector<String>();
+	    				while(thisPathTkzr.hasMoreElements())
+	    					thisPathTokVec.add(thisPathTkzr.nextToken());
+	    				Log.i("UTIL", "\tthispath::" + thispath + " has " + thisPathTokVec.size() + " tokens.");
+
+	    				int numtoks = thisPathTokVec.size();
+	    				for(int k=numtoks-1; k>=0; k--)
+	    				{    						
+		    				StringBuffer subpath = new StringBuffer();
+		    				//Log.i("UTIL", "\tk=" + k);
+	    					for(int j=0; j<=k; j++){
+	    						//Log.i("UTIL", "\tj=" + j + ", k=" + k);
+	    						subpath.append("/").append(thisPathTokVec.get(j));
+	    					}
+	    					Log.i("UTIL", "\tsubpath[" + k + "]=" + subpath.toString());
+	    					String resp = CurlOps.get(GlobalConstants.HOST + subpath);
+	    					
+	    					if(resp!=null){
+	    						JSONObject respObj = new JSONObject(resp);
+	    						JSONObject props = null;
+	    						if(respObj.has("properties") && 
+	    								(props=respObj.getJSONObject("properties")).has("Type") &&
+	    								props.getString("Type").equals("Space")){
+	    							return subpath.toString();
+	    						}
+	    					}
+	    				}
+	    				
+	    			}
+				}
+			}
+		} catch(Exception e){
+			e.printStackTrace();
 		}
 		return null;
 	}
