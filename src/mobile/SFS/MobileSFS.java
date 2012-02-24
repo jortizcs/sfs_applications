@@ -14,7 +14,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class MobileSFS extends Activity {
-	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME;
+	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME + "/room1";
 	//private static final String DEFAULT_SPACE = "/buildings/SDH/spaces";
 	//private static final String DEFAULT_SPACE = "/buildings/home/spaces";
 	
