@@ -76,7 +76,7 @@ public class AddSpace extends Activity {
 								Log.i("AddSpace.onActivityResult", "Exists? " + host_ + uri_ + "/qrc/" + qrc);
 								if(!Util.isExistingResource(host_ + uri_ + "/qrc/" + qrc)){
 									Log.i("AddSpace.onActivityResult", "Exists? NO");
-									Toast.makeText(getApplicationContext(), "Could not create:" + uri_ + "/qrc" + qrc, 
+									Toast.makeText(getApplicationContext(), "Could not create:" + uri_ + "/qrc/" + qrc, 
 											Toast.LENGTH_LONG).show();
 									throw e;
 								}

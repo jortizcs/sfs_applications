@@ -1,14 +1,9 @@
 package mobile.SFS;
 
 import java.util.StringTokenizer;
-import java.util.Vector;
-
-import org.json.JSONArray;
-
 import android.app.Activity;
 import android.util.Log;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -19,16 +14,26 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.SharedPreferences;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.util.Vector;
+
 
 public class MobileSFS extends Activity {
 	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME + "/room1";
 	//private static final String DEFAULT_SPACE = "/buildings/SDH/spaces";
 	//private static final String DEFAULT_SPACE = "/buildings/home/spaces";
-	
+	private static boolean settingGlobals = false;
+		
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mobilesfs);
         Bundle extras = getIntent().getExtras();
+    	
+        //set the previous globals if they exist
+        setPreviousGlobals();
         
         TextView currLoc = (TextView) findViewById(R.id.currLoc);
         String s = extras == null ? null : extras.getString("curr_loc");
@@ -51,7 +56,8 @@ public class MobileSFS extends Activity {
 		});
         
         ListView listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(new ArrayAdapter<String>(this, R.layout.listitem, new String[] {"Update Hierarchy", "View Services"}));
+        listView.setAdapter(new ArrayAdapter<String>(this, R.layout.listitem, new String[] {"Update Deployment State", "Scan To View Services", "Scan Deployment Info QR-Code",
+        																					"Deployment Info"}));
         //listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, new String[] {"Update Hierarchy", "View Services"}));
         
         listView.setOnItemClickListener(new OnItemClickListener() {
@@ -64,13 +70,32 @@ public class MobileSFS extends Activity {
 						intent.putExtra("curr_loc", currLocString);
 						startActivity(intent);
 						break;
-					case 1: {//intent = new Intent(MobileSFS.this, ViewServices.class); break;
+					case 1: //intent = new Intent(MobileSFS.this, ViewServices.class); break;
 						intent = new Intent("com.google.zxing.client.android.SCAN");
 		        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
 		        		intent.putExtra("curr_loc", currLocString);
 		        		startActivityForResult(intent, 0);
 		        		break;
-					}
+					case 2:
+		        		Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
+		        		intent = new Intent("com.google.zxing.client.android.SCAN");
+		        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+		        		settingGlobals = true;
+		        		startActivityForResult(intent, 0);
+		        		break;
+					case 3:
+						if(checkGlobals()){
+							StringBuffer msgBuf = new StringBuffer("Name=").append(GlobalConstants.NAME);
+							msgBuf.append("\nHost=").append(GlobalConstants.HOST);
+							msgBuf.append("\nRoot=").append(GlobalConstants.ROOT);
+							msgBuf.append("\nhome=").append(GlobalConstants.HOMEPATH);
+					    	msgBuf.append("\nqrc=").append(GlobalConstants.QRCHOME);
+					    	msgBuf.append("\ntaxonomy=").append(GlobalConstants.TAXHOME);
+							msgBuf.append("\nspaces=").append(GlobalConstants.SPACESHOME);
+							msgBuf.append("\ninventory=").append(GlobalConstants.INVHOME);
+							displayMsg(msgBuf.toString());
+				    	}
+						break;
 				}
 				
 				//intent.putExtra("curr_loc", currLocString);
@@ -86,8 +111,53 @@ public class MobileSFS extends Activity {
 	        next.putExtra("curr_loc", currLoc.getText().toString());
 			startActivity(next);*/
     	
+    	
     	String urlstr = intent.getStringExtra("SCAN_RESULT");//getIntent().getStringExtra("url");
-        Uri uri = Uri.parse(urlstr);
+        
+        if(settingGlobals){
+    		Log.i(MobileSFS.class.getName(), "setglobals:"+ settingGlobals + "\tstr=" + urlstr);
+    		try{
+        		String res = CurlOps.getConfigObjStrFromUrl(urlstr);
+        		Log.i(MobileSFS.class.getName(), "setglobals.res:"+ res);
+    			JSONObject resObj = new JSONObject(res);
+    			Log.i(MobileSFS.class.getName(), "setglobals.resObj:"+ resObj.toString());
+    			//fetch the config information from this URL
+    			if(resObj.has("host") && resObj.has("root") && resObj.has("homepath") &&
+    					resObj.has("qrchome") && resObj.has("taxhome") && resObj.has("spaceshome") && 
+    					resObj.has("invhome")){
+    				GlobalConstants.NAME = resObj.getString("deployment");
+    				GlobalConstants.HOST = resObj.getString("host");
+    				GlobalConstants.ROOT = resObj.getString("root");
+    				GlobalConstants.HOMEPATH = resObj.getString("homepath");
+    				GlobalConstants.QRCHOME = resObj.getString("qrchome");
+    				GlobalConstants.TAXHOME = resObj.getString("taxhome");
+    				GlobalConstants.SPACESHOME = resObj.getString("spaceshome");
+    				GlobalConstants.INVHOME = resObj.getString("invhome");
+    				
+    				//set the shared preferences object values for storage later on
+    				SharedPreferences pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+    				SharedPreferences.Editor editor = pref.edit();
+    				editor.putString("name", GlobalConstants.NAME);
+    				editor.putString("host", GlobalConstants.HOST);
+    				editor.putString("root", GlobalConstants.ROOT);
+    				editor.putString("homepath", GlobalConstants.HOMEPATH);
+    				editor.putString("qrchome", GlobalConstants.QRCHOME);
+    				editor.putString("taxhome", GlobalConstants.TAXHOME);
+    				editor.putString("spaceshome", GlobalConstants.SPACESHOME);
+    				editor.putString("invhome", GlobalConstants.INVHOME);
+    				editor.commit();
+    				
+    				Toast.makeText(this, "Set new configuration",Toast.LENGTH_LONG).show();
+    			} else {
+    				Log.i(MobileSFS.class.getName(), "setglobals::couldn't set them!");
+    			}
+    		} catch(Exception e){
+    			e.printStackTrace();
+    		}
+    		settingGlobals = false;
+    		return;
+    	}
+        
         //Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         Intent next = new Intent(this, ViewServices.class);
         
@@ -177,4 +247,34 @@ public class MobileSFS extends Activity {
         	Log.d("VIEW_SERVICE::ERROR", "error while fetching " + urlstr);
         }
 	}
+    
+    public void setPreviousGlobals(){
+    	SharedPreferences pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+    	if(checkGlobals()){
+    		GlobalConstants.NAME = pref.getString("name", "");
+	    	GlobalConstants.HOST = pref.getString("host", "");
+			GlobalConstants.ROOT = pref.getString("root", "");
+			GlobalConstants.HOMEPATH = pref.getString("homepath", "");
+			GlobalConstants.QRCHOME = pref.getString("qrchome", "");
+			GlobalConstants.TAXHOME = pref.getString("taxhome", "");
+			GlobalConstants.SPACESHOME = pref.getString("spaceshome", "");
+			GlobalConstants.INVHOME = pref.getString("invhome", "");
+    	}
+    }
+    
+    public boolean checkGlobals(){
+    	SharedPreferences pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+    	String testStr = pref.getString("host", "");
+    	if(testStr.equals("")){
+    		Toast.makeText(this, "Deployment Information Not Set;  Go to " +
+    				"http://is4server.com/energylens to set it.",
+					 Toast.LENGTH_LONG).show();
+    		return false;
+    	}
+    	return true;
+    }
+    
+    public void displayMsg(String msg){
+    	Toast.makeText(this, msg,Toast.LENGTH_LONG).show();
+    }
 }

@@ -19,11 +19,14 @@ public class GlobalConstants {
 	public static final String SPACESHOME = "/buildings/nokia_berkeley/spaces";*/
 	
 	//testing
-	public static final String HOST = "http://is4server.com:8084";
-	public static final String ROOT = "/";
-	public static final String HOMEPATH = "/buildings/home";
-	public static final String QRCHOME = "/buildings/home/qrc";
-	public static final String TAXHOME = "/taxonomies/ma2";
-	public static final String SPACESHOME = "/buildings/home/spaces";
-	public static final String INVHOME = "/buildings/home/inventory";
+	public static String NAME = "";
+	public static String HOST = "http://is4server.com:8084";
+	public static String ROOT = "/";
+	public static String HOMEPATH = "/buildings/home";
+	public static String QRCHOME = "/buildings/home/qrc";
+	public static String TAXHOME = "/taxonomies/ma2";
+	public static String SPACESHOME = "/buildings/home/spaces";
+	public static String INVHOME = "/buildings/home/inventory";
+	
+	public static final String PREFS = "MyPreferences";
 }

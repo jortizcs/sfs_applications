@@ -2,6 +2,7 @@ package mobile.SFS;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.widget.Toast;
@@ -16,6 +17,10 @@ public class ViewServices extends Activity {
 	
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
+		
+		if(!checkGlobals())
+			return;
+		
 		Bundle extras = getIntent().getExtras();
 		if(extras!=null){
 			currLocStr = extras.getString("curr_loc");
@@ -45,4 +50,16 @@ public class ViewServices extends Activity {
 	    }
 	    return super.onKeyDown(keyCode, event);
 	}
+	
+	public boolean checkGlobals(){
+    	SharedPreferences pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+    	String testStr = pref.getString("host", "");
+    	if(testStr.equals("")){
+    		Toast.makeText(this, "Deployment Information Not Set;  Go to " +
+    				"http://is4server.com/energylens to set it.",
+					 Toast.LENGTH_LONG).show();
+    		return false;
+    	}
+    	return true;
+    }
 }

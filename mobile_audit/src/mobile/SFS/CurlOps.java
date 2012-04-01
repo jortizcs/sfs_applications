@@ -84,4 +84,11 @@ public class CurlOps {
 		int i = loc.indexOf("qrc=");
 		return (i >= 0) ? loc.substring(i+4) : "Invalid URL";
 	}
+	
+	public static String getConfigObjStrFromUrl(String configTinyURL) throws Exception {
+		HttpURLConnection conn = (HttpURLConnection)(new URL(configTinyURL)).openConnection();
+		conn.setInstanceFollowRedirects(false);
+		String loc = conn.getHeaderField("Location");
+		return CurlOps.get(loc);
+	}
 }

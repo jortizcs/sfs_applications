@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -24,6 +25,9 @@ public class UpdateHierarchy extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.updatehierarchy);
 		Bundle extras = getIntent().getExtras();
+		
+		if(!checkGlobals())
+			return;
         
         TextView currLoc = (TextView) findViewById(R.id.currLoc);
         currLocString_ = extras.getString("curr_loc");
@@ -116,4 +120,16 @@ public class UpdateHierarchy extends Activity {
 			e.printStackTrace();
 		}
 	}
+	
+	public boolean checkGlobals(){
+    	SharedPreferences pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+    	String testStr = pref.getString("host", "");
+    	if(testStr.equals("")){
+    		Toast.makeText(this, "Deployment Information Not Set;  Go to " +
+    				"http://is4server.com/energylens to set it.",
+					 Toast.LENGTH_LONG).show();
+    		return false;
+    	}
+    	return true;
+    }
 }
