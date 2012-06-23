@@ -8,14 +8,14 @@
     <meta name="Jorge Ortiz" content="">
 
     <!-- Le styles -->
-    <link href="../bootstrap/docs/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 1px;
         padding-bottom: 1px;
       }
     </style>
-    <link href="../bootstrap/docs/assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -104,7 +104,8 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="../assets/js/jquery.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <!--<script src="../assets/js/jquery.js"></script>
     <script src="../assets/js/bootstrap-transition.js"></script>
     <script src="../assets/js/bootstrap-alert.js"></script>
     <script src="../assets/js/bootstrap-modal.js"></script>
@@ -116,7 +117,7 @@
     <script src="../assets/js/bootstrap-button.js"></script>
     <script src="../assets/js/bootstrap-collapse.js"></script>
     <script src="../assets/js/bootstrap-carousel.js"></script>
-    <script src="../assets/js/bootstrap-typeahead.js"></script>
+    <script src="../assets/js/bootstrap-typeahead.js"></script>-->
 
   </body>
 </html>

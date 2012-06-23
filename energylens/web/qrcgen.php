@@ -7,14 +7,14 @@
     <meta name="Jorge Ortiz" content="">
 
     <!-- Le styles -->
-    <link href="../bootstrap/docs/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 1px;
         padding-bottom: 1px;
       }
     </style>
-    <link href="../bootstrap/docs/assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -56,8 +56,10 @@
 <br><br><br>
 
 <?php
-include_once "../lib/php/curl_ops.php";
-include_once "../phpqrcode/phpqrcode.php";
+include_once "lib/php/curl_ops.php";
+include_once "lib/phpqrcode/phpqrcode.php";
+#error_reporting(0);
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 $max=$_GET["num"];
 $dep=$_GET["dep"];
@@ -75,7 +77,7 @@ for($i=0; $i<$max; $i++){
 	$t_tinyurl=get("http://tinyurl.com/api-create.php?url=".$thisurl);
 	array_push($urls,$t_tinyurl);
 	//echo "this_url=".$thisurl."\ttinyurl=".$t_tinyurl."\n\n";
-	QRcode::png($t_tinyurl, "../qrcs/".$i.".png"); // creates code image and outputs it directly into browser
+	QRcode::png($t_tinyurl, "qrcs/".$i.".png"); // creates code image and outputs it directly into browser
 }
 
 
@@ -91,7 +93,7 @@ while($i<$max){
 		$img=$i+$j;
 		$u = $urls[$img];
 		//echo "<td><img src=qrcs/".$img.".png"."><br><center>".$img."</center></td>";
-		echo "<td><center><img src=../qrcs/".$img.".png"."></center><center><b>".$u."</b></center></td>";
+		echo "<td><center><img src=qrcs/".$img.".png"."></center><center><b>".$u."</b></center></td>";
 	}
 	echo "</tr>";
 	$i=$i+4;
