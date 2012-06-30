@@ -11,6 +11,10 @@ README FILE FOR ENERGYLENS
 Login instructions
 `ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com`
 
+###Markdown Reference
+[About Markdown](http://en.wikipedia.org/wiki/Markdown)
+[Markdown Syntax](http://daringfireball.net/projects/markdown/syntax)
+
 ***
 
 #EnergyLens site plan by page**
