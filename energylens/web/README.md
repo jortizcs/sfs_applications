@@ -1,18 +1,17 @@
-README FILE FOR ENERGYLENS
 
 ##Development server
-* [ec2-204-236-167-113.us-west-1.compute.amazonaws.com](http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com/energylens)
+* [ec2-204-236-167-113.us-west-1.compute.amazonaws.com](http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com/energylens)  
 
-##Wikis
-[TOC](https://github.com/jortizcs/sfs_applications/wiki)
-[Ideas and Documentation](https://github.com/jortizcs/sfs_applications/wiki/Energylens-ideas)
+###Login instructions  
+        `ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com`  
+
+###Wikis
+[TOC](https://github.com/jortizcs/sfs_applications/wiki)  
+[Ideas and Documentation](https://github.com/jortizcs/sfs_applications/wiki/Energylens-ideas)  
 [Developer Info](https://github.com/jortizcs/sfs_applications/wiki/EnergyLensDevelopment)
 
-Login instructions
-`ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com`
-
 ###Markdown Reference
-[About Markdown](http://en.wikipedia.org/wiki/Markdown)
+[About Markdown](http://en.wikipedia.org/wiki/Markdown)  
 [Markdown Syntax](http://daringfireball.net/projects/markdown/syntax)
 
 ***
