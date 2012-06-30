@@ -1,11 +1,12 @@
 README FILE FOR ENERGYLENS
 
-Development server
+##Development server
 * [ec2-204-236-167-113.us-west-1.compute.amazonaws.com](http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com/energylens)
 
-*[https://github.com/jortizcs/sfs_applications/wiki](Wiki)
-*[https://github.com/jortizcs/sfs_applications/wiki/Energylens-ideas](Ideas)
-*[https://github.com/jortizcs/sfs_applications/wiki/EnergyLensDevelopment](Developer Info)
+##Wikis
+[TOC](https://github.com/jortizcs/sfs_applications/wiki)
+[Ideas and Documentation](https://github.com/jortizcs/sfs_applications/wiki/Energylens-ideas)
+[Developer Info](https://github.com/jortizcs/sfs_applications/wiki/EnergyLensDevelopment)
 
 Login instructions
 `ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com`
