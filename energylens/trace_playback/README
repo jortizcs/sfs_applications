@@ -1,0 +1,8 @@
+Script that reads the trace file 'todai_desktop_power_trace.json'
+and replayed it as a live stream to the inputted stream path.
+If the stream file does not exist, it is created.
+
+How to run:
+
+    1.  node virtual_sensor_spawner.js
+    2.  curl -X POST "http://localhost:1338" -d@create_fake_sensor1.json
