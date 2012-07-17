@@ -77,11 +77,15 @@ public class MobileSFS extends Activity {
 		        		startActivityForResult(intent, 0);
 		        		break;
 					case 2:
-		        		Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
-		        		intent = new Intent("com.google.zxing.client.android.SCAN");
-		        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-		        		settingGlobals = true;
-		        		startActivityForResult(intent, 0);
+						Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
+						try {
+			        		intent = new Intent("com.google.zxing.client.android.SCAN");
+			        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+			        		settingGlobals = true;
+			        		startActivityForResult(intent, 0);
+						} catch(Exception e){
+							displayMsg("Missing QR code reader; Please install a QR code reader");
+						}
 		        		break;
 					case 3:
 						if(checkGlobals()){
@@ -110,9 +114,12 @@ public class MobileSFS extends Activity {
 			TextView currLoc = (TextView) findViewById(R.id.currLoc);
 	        next.putExtra("curr_loc", currLoc.getText().toString());
 			startActivity(next);*/
-    	
-    	
-    	String urlstr = intent.getStringExtra("SCAN_RESULT");//getIntent().getStringExtra("url");
+    	String urlstr=null;
+    	try {
+    		urlstr = intent.getStringExtra("SCAN_RESULT");//getIntent().getStringExtra("url");
+    	} catch(Exception e){
+    		return;
+    	}
         
         if(settingGlobals){
     		Log.i(MobileSFS.class.getName(), "setglobals:"+ settingGlobals + "\tstr=" + urlstr);
