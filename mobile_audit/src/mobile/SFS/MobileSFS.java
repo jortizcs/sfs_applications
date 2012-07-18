@@ -57,8 +57,10 @@ public class MobileSFS extends Activity {
         
         ListView listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(new ArrayAdapter<String>(this, R.layout.listitem, new String[] {"Update Deployment State", "Scan To View Services", "Scan Deployment Info QR-Code",
-        																					"Deployment Info"}));
+        																					"Deployment Info", "TXM Test"}));
         //listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, new String[] {"Update Hierarchy", "View Services"}));
+        
+        final TXM txm = new TXM(getApplicationContext());
         
         listView.setOnItemClickListener(new OnItemClickListener() {
         	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -100,6 +102,7 @@ public class MobileSFS extends Activity {
 							displayMsg(msgBuf.toString());
 				    	}
 						break;
+					case 4: txm.performOp("", "", null);
 				}
 				
 				//intent.putExtra("curr_loc", currLocString);
