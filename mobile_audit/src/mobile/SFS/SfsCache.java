@@ -6,7 +6,6 @@ import org.json.JSONObject;
 import android.util.Log;
 
 import java.util.concurrent.*;
-import android.util.Log;
 import java.util.*;
 
 public class SfsCache implements Cache {
@@ -85,16 +84,12 @@ public class SfsCache implements Cache {
 						if(pubid==null){
 							//default
 							return handleDefaultPut(path, data);
-						} else {
-							//stream
-							return handleStreamPut(path, data);
 						}
+						
+						//no PUT on stream files
 					}
 					
-					//POST
-					else if(op.equalsIgnoreCase("post")){
-						
-					}
+					//no POST
 				}
 			}
 		} catch(Exception e){
@@ -109,21 +104,6 @@ public class SfsCache implements Cache {
 
 	public void removeEntry(String path) {
 
-	}
-	
-	private String getParent(String path){
-		if(path !=null && !path.equals("/")){
-			path = cleanPath(path);
-			StringBuffer buf = new StringBuffer();
-			StringTokenizer tokenizer = new StringTokenizer(path, "/");
-			Vector<String> tokens = new Vector<String>();
-			while(tokenizer.hasMoreElements())
-				tokens.add(tokenizer.nextToken());
-			for(int i=0; i<tokens.size()-1; i++)
-				buf.append("/").append(tokens.get(i));
-			return buf.toString();
-		}
-		return null;
 	}
 	
 	private String getLink(String path){
@@ -209,8 +189,7 @@ public class SfsCache implements Cache {
 				}
 
 				else if ((op.equalsIgnoreCase("create_generic_publisher") || 
-                            (op.equalsIgnoreCase("create_stream")) ||
-                            (op.equalsIgnoreCase("create_publisher"))) &&
+                            (op.equalsIgnoreCase("create_stream")) ) &&
 					!dataObj.optString("resourceName").equals("")){
 					UUID newPubId = new UUID(0L,0L);
 					String rName = dataObj.optString("resourceName");
@@ -279,9 +258,19 @@ public class SfsCache implements Cache {
 		return null;
 	}
 	
-	private JSONObject handleStreamPut(String path, JSONObject data){
+	/*private String getParent(String path){
+		if(path !=null && !path.equals("/")){
+			path = cleanPath(path);
+			StringBuffer buf = new StringBuffer();
+			StringTokenizer tokenizer = new StringTokenizer(path, "/");
+			Vector<String> tokens = new Vector<String>();
+			while(tokenizer.hasMoreElements())
+				tokens.add(tokenizer.nextToken());
+			for(int i=0; i<tokens.size()-1; i++)
+				buf.append("/").append(tokens.get(i));
+			return buf.toString();
+		}
 		return null;
-	}
-
+	}*/
 
 }
