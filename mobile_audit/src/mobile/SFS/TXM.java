@@ -12,13 +12,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Looper;
 import android.widget.Toast;
 
 public class TXM {
 	public static final String FILE = "TXLog";
 	private boolean connected_ = true;
 	private Context context_;
+	private String read_ = "";
 	
 	public TXM(Context context) {
 		context_ = context;
@@ -30,7 +30,7 @@ public class TXM {
 	 * Otherwise, writes the operation to a local log
 	 */
 	public void performOp(String op, String path, JSONObject data) {
-		displayMsg(connected_+"");
+		displayMsg(read_);
 		if(hasNetworkConnection()) {
 			displayMsg("Connected to network");
 		}
@@ -55,7 +55,9 @@ public class TXM {
 	public void flushLog() {
 		try {
 			FileInputStream in = context_.openFileInput(FILE);
-			displayMsg("reading from log: " + in.read(new byte[in.available()]));
+			byte[] buf = new byte[in.available()];
+			in.read(buf);
+			read_ += new String(buf);
 		}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -73,10 +75,9 @@ public class TXM {
 	
 	private class TXMInterrupt extends TimerTask {
 		public void run() {
-			//displayMsg("here");
 			if(!connected_ && hasNetworkConnection()) { //something has been written to the log, but connection now exists
 				connected_ = true;
-			//	flushLog();
+				flushLog();
 			}
 		}
 	}
