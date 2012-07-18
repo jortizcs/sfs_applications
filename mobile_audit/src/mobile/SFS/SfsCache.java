@@ -99,11 +99,30 @@ public class SfsCache implements Cache {
 	}
 
 	public void populateCache(String rootpath) {
-
+		try {
+			String res = CurlOps.get(GlobalConstants.HOST + rootpath + "/*" );
+			if(res!=null && !res.equals("")){
+				JSONObject resobj = new JSONObject(res);
+				Iterator keys = resobj.keys();
+				while(keys.hasNext()){
+					String path = cleanPath((String)keys.next());
+					JSONObject pathinfo = resobj.getJSONObject(path);
+					JSONObject tsqueryres = null;
+					//check if it's a stream
+					if(pathinfo.has("pubid"))
+						tsqueryres = new JSONObject(CurlOps.get(GlobalConstants.HOST + path + "?query=true&ts_timestamp=gt:now-3600"));
+					this.addEntry(path, pathinfo, tsqueryres);
+				}
+			}
+		} catch(Exception e){
+			Log.e(SfsCache.class.getName(), "", e);
+		}
 	}
 
 	public void removeEntry(String path) {
-
+		path = cleanPath(path);
+		map.remove(path);
+		map.remove(path+"/");
 	}
 	
 	private String getLink(String path){
