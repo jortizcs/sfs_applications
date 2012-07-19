@@ -60,7 +60,11 @@ public class MobileSFS extends Activity {
         																					"Deployment Info", "TXM Test"}));
         //listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, new String[] {"Update Hierarchy", "View Services"}));
         
-        final TXM txm = new TXM(getApplicationContext());
+        TXM.initTXM(getApplicationContext());
+        final JSONObject json = new JSONObject();
+        try {json.put("a", "test1");
+        json.put("b", "test2");}
+        catch(Exception e) {}
         
         listView.setOnItemClickListener(new OnItemClickListener() {
         	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -102,7 +106,7 @@ public class MobileSFS extends Activity {
 							displayMsg(msgBuf.toString());
 				    	}
 						break;
-					case 4: txm.performOp("", "", null);
+					case 4: TXM.getTXM().performOp("op1", "/test/path", json);
 				}
 				
 				//intent.putExtra("curr_loc", currLocString);
