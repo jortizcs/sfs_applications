@@ -57,8 +57,14 @@ public class MobileSFS extends Activity {
         
         ListView listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(new ArrayAdapter<String>(this, R.layout.listitem, new String[] {"Update Deployment State", "Scan To View Services", "Scan Deployment Info QR-Code",
-        																					"Deployment Info"}));
+        																					"Deployment Info", "TXM Test"}));
         //listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, new String[] {"Update Hierarchy", "View Services"}));
+        
+        TXM.initTXM(getApplicationContext());
+        final JSONObject json = new JSONObject();
+        try {json.put("a", "test1");
+        json.put("b", "test2");}
+        catch(Exception e) {}
         
         listView.setOnItemClickListener(new OnItemClickListener() {
         	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -77,11 +83,15 @@ public class MobileSFS extends Activity {
 		        		startActivityForResult(intent, 0);
 		        		break;
 					case 2:
-		        		Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
-		        		intent = new Intent("com.google.zxing.client.android.SCAN");
-		        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-		        		settingGlobals = true;
-		        		startActivityForResult(intent, 0);
+						Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
+						try {
+			        		intent = new Intent("com.google.zxing.client.android.SCAN");
+			        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+			        		settingGlobals = true;
+			        		startActivityForResult(intent, 0);
+						} catch(Exception e){
+							displayMsg("Missing QR code reader; Please install a QR code reader");
+						}
 		        		break;
 					case 3:
 						if(checkGlobals()){
@@ -96,6 +106,7 @@ public class MobileSFS extends Activity {
 							displayMsg(msgBuf.toString());
 				    	}
 						break;
+					case 4: TXM.getTXM().performOp("op1", "/test/path", json);
 				}
 				
 				//intent.putExtra("curr_loc", currLocString);
@@ -110,9 +121,12 @@ public class MobileSFS extends Activity {
 			TextView currLoc = (TextView) findViewById(R.id.currLoc);
 	        next.putExtra("curr_loc", currLoc.getText().toString());
 			startActivity(next);*/
-    	
-    	
-    	String urlstr = intent.getStringExtra("SCAN_RESULT");//getIntent().getStringExtra("url");
+    	String urlstr=null;
+    	try {
+    		urlstr = intent.getStringExtra("SCAN_RESULT");//getIntent().getStringExtra("url");
+    	} catch(Exception e){
+    		return;
+    	}
         
         if(settingGlobals){
     		Log.i(MobileSFS.class.getName(), "setglobals:"+ settingGlobals + "\tstr=" + urlstr);
