@@ -22,7 +22,7 @@ import java.util.Vector;
 
 
 public class MobileSFS extends Activity {
-	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME + "/room1";
+	private static String defaultSpace;
 	//private static final String DEFAULT_SPACE = "/buildings/SDH/spaces";
 	//private static final String DEFAULT_SPACE = "/buildings/home/spaces";
 	private static boolean settingGlobals = false;
@@ -34,11 +34,12 @@ public class MobileSFS extends Activity {
     	
         //set the previous globals if they exist
         setPreviousGlobals();
+        defaultSpace = GlobalConstants.SPACESHOME;
         
         TextView currLoc = (TextView) findViewById(R.id.currLoc);
         String s = extras == null ? null : extras.getString("curr_loc");
         Log.i("MOBILE_SFS","s=" + s);
-        final String currLocString = s == null ? DEFAULT_SPACE : s;
+        final String currLocString = s == null ? defaultSpace : s;
         Log.i("MOBILE_SFS","currLocString=" + currLocString);
         currLoc.setText(currLocString);
         if(extras==null){
@@ -79,7 +80,7 @@ public class MobileSFS extends Activity {
 		        		startActivityForResult(intent, 0);
 		        		break;
 					case 2:
-						Log.i(MobileSFS.class.getName(),"Setting the deploymen constant");
+						Log.i(MobileSFS.class.getName(),"Setting the deployment constant");
 						try {
 			        		intent = new Intent("com.google.zxing.client.android.SCAN");
 			        		intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
@@ -133,9 +134,11 @@ public class MobileSFS extends Activity {
     			//fetch the config information from this URL
     			if(resObj.has("host") && resObj.has("root") && resObj.has("homepath") &&
     					resObj.has("qrchome") && resObj.has("taxhome") && resObj.has("spaceshome") && 
-    					resObj.has("invhome")){
+    					resObj.has("invhome")) {
     				GlobalConstants.NAME = resObj.getString("deployment");
-    				GlobalConstants.HOST = resObj.getString("host");
+    				String host = resObj.getString("host");
+    				host = host.startsWith("http://") ? host : "http://" + host;
+    				GlobalConstants.HOST = host.endsWith("/") ? host.substring(0, host.length() - 1) : host;
     				GlobalConstants.ROOT = resObj.getString("root");
     				GlobalConstants.HOMEPATH = resObj.getString("homepath");
     				GlobalConstants.QRCHOME = resObj.getString("qrchome");
