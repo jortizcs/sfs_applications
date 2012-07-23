@@ -229,11 +229,11 @@ function seq_filenostream(infokey, acmepath, acmestreampath, data, callback){
                             iteration +=1;
                             forwardit(function(m){});
                             
-                            if(acmestreampath.indexOf("energy")>0){
+                            /*if(acmestreampath.indexOf("energy")>0){
                                 sfs_setprops(acmestreampath,{"units":"mWh"});
                             } else {
                                 sfs_setprops(acmestreampath,{"units":"mW"});
-                            }
+                            }*/
                             
                             console.log("acmesinfo[" + infokey + "]=" + pubid);
                             callback({"status":"forwarded"});
@@ -254,7 +254,7 @@ function seq_filenostream(infokey, acmepath, acmestreampath, data, callback){
 function forwardit(callback){
     var keys = Object.keys(smapreport);
     if(iteration<keys.length){
-        console.log("iteration: " + iteration + " of " + keys.length);
+        console.log("iteration: " + (iteration+1) + " of " + keys.length);
         var i = iteration;
         //    /fitpc_acmes/8a0/true_power; the first empty string is counted
         var pieces = String(keys[i]).replace(/^\s+|\s+$/g, '').split('/');
