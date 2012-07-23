@@ -1,5 +1,6 @@
 package sfs.db.txactions;
 
+import sfs.db.*;
 import java.net.*;
 
 import org.simpleframework.transport.connect.Connection;
@@ -12,18 +13,28 @@ import org.simpleframework.http.Query;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+
 public class SfsGlobalTransactionManager implements Container{
 
+    private static final MySqlDriver mysqldb = MySqlDriver.getInstance();
+    private static final JSONParser parser = new JSONParser();
     private static Logger logger = Logger.getLogger(SfsGlobalTransactionManager.class.getPackage().getName());
     private static String sfsHttpHost = null;
-    private static String sfsHttpPort = -1;
+    private static int sfsHttpPort = -1;
 
-    public SfsGlobalTransactionManager(){
+    public SfsGlobalTransactionManager(String host, int port, String protocol){
+        if(protocol.equalsIgnoreCase("http")){
+            sfsHttpHost = host;
+            sfsHttpPort = port;
+        }
     }
 
     public static void main(String[] args){
         try {
-            SfsGlobalTransactionManager server = new SfsGlobalTransactionManager();
+            SfsGlobalTransactionManager server = new SfsGlobalTransactionManager("", -1, "http");
             //http
             Connection connection = new SocketConnection((Container)server);
             SocketAddress address = new InetSocketAddress(4896);
@@ -35,9 +46,27 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     public void handle(Request request, Response response){
+        String method = request.getMethod();
+        if(method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("POST")){
+            JSONObject contentObj = parser.parse(request.getContent());
+            String type = contentObj.optString("type");
+            JSONArray log = contentObj.optJSONArray("ops");
+            if(type.equals("log")){
+                /*for(int i=0; i<log.size(); i++){
+                }*/
+                //sort these by timestamp
+                //try to apply it in timestamp order
+                //  -- check the log, if it's the latest one, apply it, if not, resolve the conflict
+            } else {
+                forwardOpToSfs(method, request.getPath(), contentObj);
+            }
+        }
     }
 
-    public void forwardOpToSfs(JSONObject sfsop){
+    /**
+     * handle create/delete [default|symlink] resources, update/overwrite properties
+     */
+    public void forwardOpToSfs(String method, String path, JSONObject data ){
     }
 
     public synchronized void log(JSONObject sfsop){
