@@ -19,20 +19,28 @@ public class TXM {
 	
 	private static TXM txm_;
 	
+	private long localInitTime, serverInitTime;
 	private boolean connected_ = true;
 	private Context context_;
-	private int x = 0;
 	
 	public static TXM getTXM() {
 		return txm_;
 	}
 	
 	public static TXM initTXM(Context context) {
-		return txm_ = new TXM(context);
+		try {
+			return txm_ = new TXM(context);
+		}
+		catch(Exception e) {
+			return null;
+		}
 	}
 	
-	private TXM(Context context) {
+	private TXM(Context context) throws Exception {
 		context_ = context;
+		localInitTime = System.currentTimeMillis();
+		serverInitTime = Long.valueOf(new JSONObject(CurlOpsReal.get(GlobalConstants.HOST + "/time")).getString("Now"));
+		displayMsg("local: " + localInitTime + " server: " + serverInitTime);
 		new Timer().scheduleAtFixedRate(new TXMInterrupt(), 1000, 1000);
 	}
 	
@@ -41,7 +49,7 @@ public class TXM {
 	 * Otherwise, writes the operation to a local log
 	 */
 	public String performOp(String op, String path, JSONObject data) {
-		displayMsg(x+"");
+		displayMsg("op: " + op + ", path: " + path + ", data: " + data.toString());
 		try {
 			if(hasNetworkConnection()) {
 				displayMsg("Connected to network");
@@ -64,14 +72,17 @@ public class TXM {
 				json.put("op", op);
 				json.put("path", path);
 				json.put("data", data);
+				json.put("ts", serverInitTime + System.currentTimeMillis() - localInitTime);
 				out.write(json.toString().getBytes());
 				out.close();
 			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			displayMsg("error");
 		}
 		
+		//return SfsCache.getInstance().performOp(op, path, data);
 		return null;
 	}
 	
@@ -111,7 +122,8 @@ public class TXM {
 	}
 	
 	private void displayMsg(String msg){
-    	Toast.makeText(context_, msg,Toast.LENGTH_LONG).show();
+    	Toast.makeText(context_, msg, Toast.LENGTH_LONG).show();
+    	System.out.println(msg);
     }
 	
 	private boolean hasNetworkConnection() {
@@ -121,7 +133,6 @@ public class TXM {
 	
 	private class TXMInterrupt extends TimerTask {
 		public void run() {
-			x++;
 			if(!connected_ && hasNetworkConnection()) { //something has been written to the log, but connection now exists
 				connected_ = true;
 				flushLog();

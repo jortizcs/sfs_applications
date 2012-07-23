@@ -103,6 +103,6 @@ public class CurlOps {
 		HttpURLConnection conn = (HttpURLConnection)(new URL(configTinyURL)).openConnection();
 		conn.setInstanceFollowRedirects(false);
 		String loc = conn.getHeaderField("Location");
-		return CurlOps.get(loc);
+		return CurlOpsReal.get(loc);
 	}
 }
