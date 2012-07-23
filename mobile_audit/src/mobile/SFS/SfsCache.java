@@ -1,13 +1,13 @@
 package mobile.SFS;
 
+import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.util.Log;
-
-import java.util.concurrent.*;
-import android.util.Log;
-import java.util.*;
 
 public class SfsCache implements Cache {
 	
@@ -18,7 +18,7 @@ public class SfsCache implements Cache {
 		map = new ConcurrentHashMap<String, JSONObject>();
 	}
 	
-	public SfsCache getInstance(){
+	public static SfsCache getInstance(){
 		if(cache == null)
 			cache = new SfsCache();
 		return cache;

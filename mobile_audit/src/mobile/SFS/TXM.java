@@ -21,7 +21,6 @@ public class TXM {
 	
 	private boolean connected_ = true;
 	private Context context_;
-	private int x = 0;
 	
 	public static TXM getTXM() {
 		return txm_;
@@ -41,7 +40,6 @@ public class TXM {
 	 * Otherwise, writes the operation to a local log
 	 */
 	public String performOp(String op, String path, JSONObject data) {
-		displayMsg(x+"");
 		try {
 			if(hasNetworkConnection()) {
 				displayMsg("Connected to network");
@@ -70,8 +68,10 @@ public class TXM {
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			displayMsg("error");
 		}
 		
+		//return SfsCache.getInstance().performOp(op, path, data);
 		return null;
 	}
 	
@@ -121,7 +121,6 @@ public class TXM {
 	
 	private class TXMInterrupt extends TimerTask {
 		public void run() {
-			x++;
 			if(!connected_ && hasNetworkConnection()) { //something has been written to the log, but connection now exists
 				connected_ = true;
 				flushLog();
