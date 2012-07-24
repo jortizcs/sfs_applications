@@ -3,6 +3,7 @@ package sfs.db.txactions;
 import sfs.db.*;
 import java.net.*;
 import java.util.*;
+import java.io.*;
 
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
@@ -79,24 +80,74 @@ public class SfsGlobalTransactionManager implements Container{
 
     public void applyAttempt(JSONObject sfsop){
         long ts = ((Long)sfsop.get("ts")).longValue();
-        JSONArray getAllOpsAfter(ts);
+
+        //future operations relative to this one
         //try to apply it in timestamp order
         //  -- check the log, if it's the latest one, apply it, if not, resolve the conflict
+        JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
+
+        if(relFutureOps.size()>0){
+            rollback(ts);
+            apply(sfsop);
+            replay(relFutureOps);
+        } else {
+            apply(sfsop);
+        }
     }
 
-    public synchronized void log(JSONObject sfsop){
+    public void apply(JSONObject sfsOp){
+        try {
+            String path = (String)sfsOp.get("path");
+            String method = (String)sfsOp.get("op");
+            JSONObject data = (JSONObject) sfsOp.get("data");
+            URL url = new URL("http://" + sfsHttpHost + ":" + sfsHttpPort + path);
+            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            conn.setRequestMethod(method.toUpperCase());
+            conn.setDoOutput(true);
+            conn.connect();
+
+            if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post")){
+                OutputStream os = conn.getOutputStream();
+                os.write(data.toString().getBytes());
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                            conn.getInputStream()));
+            StringBuffer response = new StringBuffer();
+            String line = null;
+            while((line=reader.readLine())!=null)
+                response.append(line);
+            logger.info(sfsHttpHost+":"+sfsHttpPort+" response::" + response.toString());
+            conn.disconnect();
+
+            //log it if the operation was successful in StreamFS
+            String sfsOpString = (String)data.get("operation");
+            int responseCode = conn.getResponseCode();
+            if(sfsOpString.startsWith("create_")&& responseCode==201){
+                log(data);
+            } else if(method.equalsIgnoreCase("delete") && responseCode==200){
+                log(data);
+            } else {
+                logger.warning("NOT_APPLIED::"+sfsOpString);
+            }
+        } catch(Exception e){
+            logger.log(Level.WARNING, "", e);
+        }
+        
     }
 
     public void rollback(long timestamp){
     }
 
-    public void replay(long timestamp){
+    public void replay(JSONArray ops){
     }
 
     /**
      * This is where policy gets enforced.
      */
-    public synchronized void resolveConflict(JSONObject sfsop){
+    private synchronized void resolveConflict(JSONObject sfsop){
+    }
+
+    private synchronized void log(JSONObject sfsop){
     }
    
     private class LogEntryComparator<E> implements Comparator<E>{
