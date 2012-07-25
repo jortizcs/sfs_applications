@@ -16,20 +16,22 @@ import android.widget.Toast;
 
 public class TXM {
 	public static final String FILE = "TXLog";
+	public static final String LOG_PATH = "";
+	private static final boolean DEBUG = true;
 	
-	private static TXM txm_;
+	private static TXM txm;
 	
-	private long localInitTime, serverInitTime;
+	private long localInitTime_, serverInitTime_;
 	private boolean connected_ = true;
 	private Context context_;
 	
 	public static TXM getTXM() {
-		return txm_;
+		return txm;
 	}
 	
 	public static TXM initTXM(Context context) {
 		try {
-			return txm_ = new TXM(context);
+			return txm = new TXM(context);
 		}
 		catch(Exception e) {
 			return null;
@@ -38,9 +40,9 @@ public class TXM {
 	
 	private TXM(Context context) throws Exception {
 		context_ = context;
-		localInitTime = System.currentTimeMillis();
-		serverInitTime = Long.valueOf(new JSONObject(CurlOpsReal.get(GlobalConstants.HOST + "/time")).getString("Now"));
-		displayMsg("local: " + localInitTime + " server: " + serverInitTime);
+		localInitTime_ = System.currentTimeMillis();
+		serverInitTime_ = Long.valueOf(new JSONObject(CurlOpsReal.get(GlobalConstants.HOST + "/time")).getString("Now"));
+		displayMsg("local: " + localInitTime_ + " server: " + serverInitTime_);
 		new Timer().scheduleAtFixedRate(new TXMInterrupt(), 1000, 1000);
 	}
 	
@@ -50,6 +52,8 @@ public class TXM {
 	 */
 	public String performOp(String op, String path, JSONObject data) {
 		displayMsg("op: " + op + ", path: " + path + ", data: " + data.toString());
+		SfsCache cache = SfsCache.getInstance();
+		
 		try {
 			if(hasNetworkConnection()) {
 				displayMsg("Connected to network");
@@ -72,7 +76,8 @@ public class TXM {
 				json.put("op", op);
 				json.put("path", path);
 				json.put("data", data);
-				json.put("ts", serverInitTime + System.currentTimeMillis() - localInitTime);
+				json.put("ts", serverInitTime_ + System.currentTimeMillis() - localInitTime_);
+				json.put("type", cache.getEntry(path).has("links_to") ? "symlink" : cache.getEntry(path).getString("type"));
 				out.write(json.toString().getBytes());
 				out.close();
 			}
@@ -82,8 +87,7 @@ public class TXM {
 			displayMsg("error");
 		}
 		
-		//return SfsCache.getInstance().performOp(op, path, data);
-		return null;
+		return cache.performOp(op, path, data).toString();
 	}
 	
 	/**
@@ -114,16 +118,18 @@ public class TXM {
 			JSONObject log = new JSONObject();
 			log.put("type", "log");
 			log.put("data", arr);
-			//send log to server
+			CurlOpsReal.post(log.toString(), LOG_PATH); //send log to server
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private void displayMsg(String msg){
-    	Toast.makeText(context_, msg, Toast.LENGTH_LONG).show();
-    	System.out.println(msg);
+	private void displayMsg(String msg) {
+		if(DEBUG) {
+			Toast.makeText(context_, msg, Toast.LENGTH_LONG).show();
+			System.out.println(msg);
+		}
     }
 	
 	private boolean hasNetworkConnection() {
