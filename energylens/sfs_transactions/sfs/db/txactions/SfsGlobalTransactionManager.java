@@ -60,7 +60,7 @@ public class SfsGlobalTransactionManager implements Container{
                 JSONObject[] log_array = (JSONObject[])log.toArray();
                 Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
                 for(int i=0; i<log.size(); i++)
-                    applyAttempt(log_array[i]);    
+                    applyAttempt(log_array[i]);
                 
                 
             } else {
@@ -87,15 +87,18 @@ public class SfsGlobalTransactionManager implements Container{
         JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
 
         if(relFutureOps.size()>0){
-            rollback(ts);
-            apply(sfsop);
+            rollback(relFutureOps);
+            apply(sfsop, true);
             replay(relFutureOps);
         } else {
-            apply(sfsop);
+            apply(sfsop, true);
         }
     }
 
-    public void apply(JSONObject sfsOp){
+    /**
+     *
+     */
+    public boolean apply(JSONObject sfsOp, boolean writeLog){
         try {
             String path = (String)sfsOp.get("path");
             String method = (String)sfsOp.get("op");
@@ -123,19 +126,91 @@ public class SfsGlobalTransactionManager implements Container{
             String sfsOpString = (String)data.get("operation");
             int responseCode = conn.getResponseCode();
             if(sfsOpString.startsWith("create_")&& responseCode==201){
-                log(data);
+                if(writeLog)
+                    log(data);
+                else
+                    unlog(data);
+                return true;
             } else if(method.equalsIgnoreCase("delete") && responseCode==200){
-                log(data);
+                if(writeLog)
+                    log(data);
+                else
+                    unlog(data);
+                return true;
             } else {
                 logger.warning("NOT_APPLIED::"+sfsOpString);
+                return false;
             }
         } catch(Exception e){
             logger.log(Level.WARNING, "", e);
         }
-        
+        return false;
     }
 
-    public void rollback(long timestamp){
+    public void rollback(JSONArray futureOps){
+        //sort and apply the negative operation (negop) in reverse chronological order
+        JSONObject[] log_array = (JSONObject[])futureOps.toArray();
+        Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
+        for(int i=log_array.length-1; i>=0; --i){
+            JSONObject entry = log_array[i];
+            String method = (String)entry.get("op");
+            JSONObject data = (JSONObject)entry.get("data");
+            String sfsoperation = (String)data.get("operation");
+            String type = (String)entry.get("type");
+
+            //negop entries
+            long negop_ts = ((Long)entry.get("ts")).longValue();
+            String negop_method = null;
+            String negop_path = (String)entry.get("path");
+            JSONObject negop_data = null;
+
+            if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post")){
+                if(sfsoperation.equalsIgnoreCase("create_resource") ||
+                    sfsoperation.equalsIgnoreCase("create_generic_resource") ||
+                    sfsoperation.equalsIgnoreCase("create_symlink")){
+                    negop_method = "DELETE";
+                }
+            } else if(method.equalsIgnoreCase("delete")){
+                if(type.equals("default")){
+                    negop_method = "PUT";
+                    negop_data = new JSONObject();
+                    negop_data.put("operation", "create_resource");
+                    negop_data.put("resourceName", 
+                            negop_path.substring(negop_path.lastIndexOf("/")+1, 
+                                                 negop_path.length()));
+                    negop_data.put("resourceType", "default");
+                } else if(type.equals("stream")){
+                    negop_method = "PUT";
+                    negop_data = new JSONObject();
+                    negop_data.put("operation", "create_generic_publisher");
+                    negop_data.put("resourceName", 
+                            negop_path.substring(negop_path.lastIndexOf("/")+1, 
+                                                 negop_path.length()));
+                } else if(type.equals("symlink")){
+                    negop_method = "POST";
+                    negop_data = new JSONObject();
+                    negop_data.put("operation", "create_symlink");
+                    negop_data.put("uri", getParent(negop_path));
+                    negop_data.put("name", 
+                            negop_path.substring(negop_path.lastIndexOf("/")+1, 
+                                                 negop_path.length()));
+                }
+            }
+
+            //apply and remove from the log
+            JSONObject negop = new JSONObject();
+            negop.put("op", negop_method);
+            negop.put("path", negop_path);
+            if((negop_method.equalsIgnoreCase("put") || negop_method.equalsIgnoreCase("post")) &&
+                negop_data!=null){
+                negop.put("data", negop_data);
+                apply(negop, false);
+            } else if(negop_method.equalsIgnoreCase("delete")){
+                apply(negop, false);
+            } else {
+                logger.warning("could not rollback::" + entry.toString());
+            }
+        }
     }
 
     public void replay(JSONArray ops){
@@ -148,6 +223,19 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     private synchronized void log(JSONObject sfsop){
+        mysqldb.addToLog(sfsop);
+    }
+
+    private synchronized void unlog(JSONObject sfsop){
+        mysqldb.removeFromLog(sfsop);
+    }
+
+    private String getParent(String path){
+        return null;
+    }
+
+    private String cleanPath(String path){
+        return null;
     }
    
     private class LogEntryComparator<E> implements Comparator<E>{
