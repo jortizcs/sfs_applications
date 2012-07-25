@@ -72,12 +72,6 @@ public class SfsGlobalTransactionManager implements Container{
         }
     }
 
-    /**
-     * handle create/delete [default|symlink] resources, update/overwrite properties
-     */
-    public void forwardOpToSfs(String method, String path, JSONObject data ){
-    }
-
     public void applyAttempt(JSONObject sfsop){
         long ts = ((Long)sfsop.get("ts")).longValue();
 
@@ -100,7 +94,7 @@ public class SfsGlobalTransactionManager implements Container{
      */
     public boolean apply(JSONObject sfsOp, boolean writeLog){
         try {
-            String path = (String)sfsOp.get("path");
+            String path = cleanPath((String)sfsOp.get("path"));
             String method = (String)sfsOp.get("op");
             JSONObject data = (JSONObject) sfsOp.get("data");
             URL url = new URL("http://" + sfsHttpHost + ":" + sfsHttpPort + path);
@@ -161,7 +155,7 @@ public class SfsGlobalTransactionManager implements Container{
             //negop entries
             long negop_ts = ((Long)entry.get("ts")).longValue();
             String negop_method = null;
-            String negop_path = (String)entry.get("path");
+            String negop_path = cleanPath((String)entry.get("path"));
             JSONObject negop_data = null;
 
             if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post")){
@@ -190,7 +184,7 @@ public class SfsGlobalTransactionManager implements Container{
                     negop_method = "POST";
                     negop_data = new JSONObject();
                     negop_data.put("operation", "create_symlink");
-                    negop_data.put("uri", getParent(negop_path));
+                    negop_data.put("uri", cleanPath(getParent(negop_path)));
                     negop_data.put("name", 
                             negop_path.substring(negop_path.lastIndexOf("/")+1, 
                                                  negop_path.length()));
@@ -216,12 +210,6 @@ public class SfsGlobalTransactionManager implements Container{
     public void replay(JSONArray ops){
     }
 
-    /**
-     * This is where policy gets enforced.
-     */
-    private synchronized void resolveConflict(JSONObject sfsop){
-    }
-
     private synchronized void log(JSONObject sfsop){
         mysqldb.addToLog(sfsop);
     }
@@ -231,11 +219,38 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     private String getParent(String path){
-        return null;
+        logger.info("Getting parent of " + path);
+        if(path==null || path.equals("/")){
+            logger.info("Returning NULL::" + path + " has no parent");
+            return null;
+        }
+        StringTokenizer tokenizer = new StringTokenizer(path, "/");
+        Vector<String> tokens = new Vector<String>();
+        while(tokenizer.hasMoreElements())
+            tokens.add(tokenizer.nextToken());
+        StringBuffer parentPathBuffer = new StringBuffer();
+        if(tokens.size()==1)
+            parentPathBuffer.append("/");
+        else 
+            for(int i=0; i<tokens.size()-1; i++)
+                parentPathBuffer.append("/").append(tokens.elementAt(i));
+        logger.info("Parent_path=" + parentPathBuffer.toString());
+        return parentPathBuffer.toString();
     }
 
     private String cleanPath(String path){
-        return null;
+        //clean up the path
+        if(path == null)
+            return path;
+        if(path.equals("") || path.equals("/"))
+            return path;
+
+        if(!path.startsWith("/"))
+            path = "/" + path;
+        path = path.replaceAll("/+", "/");
+        if(path.endsWith("/"))
+            path = path.substring(0,path.length()-1);
+        return path;
     }
    
     private class LogEntryComparator<E> implements Comparator<E>{

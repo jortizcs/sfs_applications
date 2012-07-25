@@ -11,6 +11,17 @@ var sfshost = "http://" + host + ":" + port;
 
 var acmesinfo = new Object();
 
+function check_connection(){
+    http.get(sfshost, function(res){
+            if(res.statusCode != 404){
+               process.kill(1);
+            }
+        }).on('error', 
+            function(e){
+                process.kill(1);
+            });
+}
+
 function addToAcmesInfo(obj){
     var keys = Object.keys(obj);
     for(i=0; i<keys.length; i++){
@@ -72,6 +83,7 @@ function handle(req, resp){
             }
         } catch(e){
             console.log(e);
+            process.exit(1);
         }
         resp.writeHead(200, {'Content-Type': 'text/json'});
         resp.end("{\"status\":\"success\"}");
@@ -81,5 +93,7 @@ function handle(req, resp){
 var server = http.createServer(handle);
 server.listen(1339, host);
 console.log("starting server " + host + ":1339");
+
+setInterval(check_connection, 1000*75);
 
 
