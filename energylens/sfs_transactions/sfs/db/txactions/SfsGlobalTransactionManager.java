@@ -61,10 +61,8 @@ public class SfsGlobalTransactionManager implements Container{
                 Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
                 for(int i=0; i<log.size(); i++)
                     applyAttempt(log_array[i]);
-                
-                
             } else {
-                forwardOpToSfs(method, request.getPath().getPath(), contentObj);
+                applyAttempt(contentObj);
             }
         }
         } catch(Exception e){

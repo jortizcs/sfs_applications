@@ -85,7 +85,7 @@ public class MySqlDriver {
             JSONParser parser = new JSONParser();
             String home=null;
             String dbConfigFile = "sfs/db/db_config/db_info.json";
-            if((home=System.getenv().get("SFSHOME")) != null)
+            if((home=System.getenv().get("SFSXACTIONS_HOME")) != null)
                 dbConfigFile = home + "/sfs/db/db_config/db_info.json";
             logger.info("home: " + System.getenv().get("SFSHOME") + "; config: " + dbConfigFile);
             File configFile = new File(dbConfigFile);
