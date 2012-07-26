@@ -1,0 +1,37 @@
+TraceWriter.java        generates these sample files.  The parameters are
+                        java TraceWriter [all | sample0[1|2|3|4|5]] [runtest | reruntest]
+
+-    run     ::  generates a new file and runs the trace.
+
+-    rerun   ::  runs the trace if it exists, otherwise it creates a new one
+                    and runs the test.
+
+-    all     ::  generates all the sample traces and runs them.
+
+
+
+======= Traces generated =======
+
+sample01.sfs.log.json   a sample log trace that's a direct operation on streamfs.
+                        StreamFS traces should be forwarded to the StreamFS server.
+
+sample02.sfs.log.json   a sample log trace that is submitted for the set of operations
+                        used to register an monitor, a QR code, and their attachment.
+
+
+
+
+### inter-leaved operations that do not conflict
+
+sample03.sfs.log.json   a sample log trace that is submitted for the set of operations
+                        used to register several plug-loads and their attachment.
+sample04.sfs.log.json   another sample log trace that is submitted for a set of operations
+                        used to register another set of items in the same room as
+                        the one in sample03.  These two should be submitted simultaneously.
+                        Notice that the timestamps are interleaved, but that's okay because
+                        these updated do not conflict.
+
+sample05.sfs.log.json   an operation that conflicts conflicts with one of the operations
+                        in the sample03 trace.  Submit sample03 before submitting sample05.
+
+

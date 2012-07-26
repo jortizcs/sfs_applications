@@ -1,0 +1,5 @@
+{
+    "operation":"create_resource",
+    "resourceName":"xactions",
+    "resourceType":"default"
+}
