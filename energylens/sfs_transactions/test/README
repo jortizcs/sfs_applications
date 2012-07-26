@@ -31,6 +31,7 @@ sample04.sfs.log.json   another sample log trace that is submitted for a set of 
                         Notice that the timestamps are interleaved, but that's okay because
                         these updated do not conflict.
 
+### inter-leaved with sample03, causes problems
 sample05.sfs.log.json   an operation that conflicts conflicts with one of the operations
                         in the sample03 trace.  Submit sample03 before submitting sample05.
 
