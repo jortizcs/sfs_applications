@@ -70,7 +70,7 @@ public class Util {
 	}
 	
 	public static String getUriFromQrc(String qrc) throws Exception {
-		String s  = CurlOps.get(GlobalConstants.HOST + GlobalConstants.QRCHOME + "/" + qrc);
+		String s  = CurlOpsReal.get(GlobalConstants.HOST + GlobalConstants.QRCHOME + "/" + qrc); //modified, must have connection to change location
 		//String s = CurlOps.get("http://is4server.com:8083/buildings/SDH/qrc/" + qrc);
 		//String s = CurlOps.get("http://is4server.com:8084/buildings/home/qrc/" + qrc);
 		Log.i("UTIL", "getRes: " + s);

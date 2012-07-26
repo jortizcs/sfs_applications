@@ -184,14 +184,14 @@ public class MobileSFS extends Activity {
         		Bundle extras = getIntent().getExtras();
         		TextView currLoc_ = (TextView) findViewById(R.id.currLoc);
         		if(extras==null)
-        			extras.putString("curr_loc", currLoc_.getText().toString());
+        			extras.putString("curr_loc", currLoc_.getText().toString()); //um what??
         		else
         			extras.putString("curr_loc", extras.getString("curr_loc"));
                 currLoc_.setText(extras.getString("curr_loc"));
                 next.putExtra("curr_loc", extras.getString("curr_loc"));
                 Log.i("VIEW_SERVICES", "bundle.curr_loc_1=" + extras.getString("curr_loc"));
         		
-        		//get the thing this qrc code points to
+        		//get the thing this qr code points to
         		String thingStr = cArray.getString(0);
         		Log.i("VIEW_SERVICES", "thingStr=" + thingStr);
         		String childPath = Util.getUriFromQrc(qrcStr);

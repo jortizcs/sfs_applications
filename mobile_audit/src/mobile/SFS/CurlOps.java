@@ -1,7 +1,11 @@
 package mobile.SFS;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 import org.json.JSONObject;
 
@@ -28,7 +32,7 @@ public class CurlOps {
 		return TXM.getTXM().performOp("GET", urlString, null);
 	}
 	
-	/*public static String post(String data, String urlString) throws Exception {
+	public static String post(String data, String urlString) throws Exception {
 		String total = new String("");
 		// Construct data
 		// String data = URLEncoder.encode("key1", "UTF-8") + "=" +
@@ -55,11 +59,11 @@ public class CurlOps {
 		rd.close();
 		return total;
 
-	}*/
-	
-	public static String post(String data, String urlString) throws Exception {
-		return TXM.getTXM().performOp("POST", urlString, new JSONObject(data));
 	}
+	
+	/*public static String post(String data, String urlString) throws Exception {
+		return TXM.getTXM().performOp("POST", urlString, new JSONObject(data));
+	}*/
 	
 	/*public static String put(String data, String urlString) throws Exception {
 		URL url = new URL(urlString);
@@ -76,7 +80,7 @@ public class CurlOps {
 		return TXM.getTXM().performOp("PUT", urlString, new JSONObject(data));
 	}
 	
-	/*public static String delete(String urlString) throws Exception {
+	public static String delete(String urlString) throws Exception {
 		URL url = new URL(urlString);
 		HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
 		httpCon.setDoOutput(true);
@@ -85,18 +89,21 @@ public class CurlOps {
 		httpCon.connect();
 		//return urlString;
 		return httpCon.getResponseMessage();
-	}*/
-	
-	public static String delete(String urlString) throws Exception {
-		return TXM.getTXM().performOp("DELETE", urlString, null);
 	}
+	
+	/*public static String delete(String urlString) throws Exception {
+		return TXM.getTXM().performOp("DELETE", urlString, null);
+	}*/
 	
 	public static String getQrcFromUrl(String tinyURL) throws Exception {
 		HttpURLConnection conn = (HttpURLConnection)(new URL(tinyURL)).openConnection();
 		conn.setInstanceFollowRedirects(false);
 		String loc = conn.getHeaderField("Location"); //null pointer exception here
+		System.out.println(loc);
 		int i = loc.indexOf("qrc=");
-		return (i >= 0) ? loc.substring(i+4) : "Invalid URL";
+		String s = (i >= 0) ? loc.substring(i+4) : "Invalid URL";
+		System.out.println(s);
+		return s;
 	}
 	
 	public static String getConfigObjStrFromUrl(String configTinyURL) throws Exception {

@@ -1,14 +1,14 @@
 package mobile.SFS;
 
-import org.json.JSONObject;
-import org.json.JSONArray;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TimerTask;
-import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.util.Log;
 

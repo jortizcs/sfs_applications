@@ -37,21 +37,21 @@ public class AddResource extends Activity {
 		switch(resType) {
 			case ACM: return "Electronics/Other";
 			case BAT: return "Electronics/Other";
-			case COF: return "Miscellaneous/Electric_housewares";
+			case COF: return "Miscellaneous/Electric_Housewares";
 			case CPU: return "Electronics/Computer/other_computer/";
 			case INK: return "Electronics/Imaging/printer";
-			case LAM: return "Miscellaneous/Electric_housewares";
+			case LAM: return "Miscellaneous/Electric_Housewares";
 			case LAS: return "Electronics/Imaging/printer/";
 			case MAC: return "Electronics/Computer/integrated_tower_lcd/";
-			case MIC: return "Miscellaneous/Electric_housewares/";
+			case MIC: return "Miscellaneous/Electric_Housewares/";
 			case NOT: return "Electronics/Computer/laptop/";
 			case OTH: return "Miscellaneous/Other";
 			case PHO: return "Electronics/Telephony/";
-			case REF: return "Miscellaneous/Electric_housewares";
+			case REF: return "Miscellaneous/Electric_Housewares";
 			case SER: return "Electronics/Computer/server_tower";
 			case SPH: return "Electronics/Other/";
 			case SPS: return "Miscellaneous/Other/";
-			case TEA: return "Miscellaneous/Electric_housewares";
+			case TEA: return "Miscellaneous/Electric_Housewares";
 			case LCD: return "Electronics/Display/computer_lcd";
 			default: return "Miscellaneous/Other/";
 		}
@@ -155,12 +155,12 @@ public class AddResource extends Activity {
 			if(Util.isExistingResource(host_ + uri_ + "/qrc/" + qrc_)) {
 				JSONArray qrcc = Util.getChildren(GlobalConstants.HOST + GlobalConstants.QRCHOME + "/" + qrc_);
 				Log.i("AddResource.onActivityResult", "QRC_CHILDREN::" + qrcc);
-				if(qrcc !=null && qrcc.length()==0){
+				if(qrcc !=null && qrcc.length()==0) {
 					String name = resName_.getText().toString();
 					
 					Log.i("AddResource", "name="+name);
-					Log.i("AddResource", "GET::" + host_ + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)));
-					JSONArray jarr = Util.getChildren(host_ + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)));
+					Log.i("AddResource", "GET::" + host_ + GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)));
+					JSONArray jarr = Util.getChildren(host_ + GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)));
 					Log.i("AddResource", "GET_RESULT::" + jarr.toString());
 					int count = 1;
 			
@@ -180,12 +180,12 @@ public class AddResource extends Activity {
 	//				properties.put("Type", name.startsWith("ACM") ? "Meter" : "Item");
 					
 					CheckBox isMeterCB = (CheckBox) findViewById(R.id.is_meter);
-					if(name.startsWith("ACM") || isMeterCB.isChecked()){
+					if(name.startsWith("ACM") || isMeterCB.isChecked()) {
 						properties.put("Type", "Meter");
 						try {
 							Util.createResource(nname, "meter", host_ + uri_ + "/inventory");
 							Log.i("AddResource", "creating meter resource; " + host_ + uri_ + "/inventory/" + nname);
-						} catch (Exception e){
+						} catch (Exception e) {
 							Log.i("AddResource.onActivityResult", "Exists? " + host_ + uri_ + "/inventory/" + nname);
 							if(!Util.isExistingResource(host_ + uri_ + "/inventory/" + nname)){
 								Log.i("AddResource.onActivityResult", "Exists? NO");
@@ -194,7 +194,7 @@ public class AddResource extends Activity {
 								throw e;
 							}
 						}
-					} else{
+					} else {
 						properties.put("Type", "Item");
 						try {
 							Util.createResource(nname, "default", host_ + uri_ + "/inventory");
@@ -211,17 +211,17 @@ public class AddResource extends Activity {
 					}
 					
 					try {
-						Util.createSymlink("/taxonomies/ma2/" + getTax(ResType.valueOf(name)),
+						Util.createSymlink(GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)),
 								uri_ + "/inventory/" + nname, host_);
 						Log.i("AddResource", "creating symlink from taxonomy; " + uri_ + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)) + 
 								" to new resource (" + host_ + uri_ + "/inventory/" + nname + ")");
 					} catch (Exception e){
 						Log.i("AddResource.onActivityResult", 
-								"Exists? " + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)) + "/" + nname);
-						if(!Util.isExistingResource(host_ + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)) + "/" + nname)){
+								"Exists? " + GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)) + "/" + nname);
+						if(!Util.isExistingResource(host_ + GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)) + "/" + nname)){
 							Log.i("AddResource.onActivityResult", "Exists? NO");
 							Toast.makeText(getApplicationContext(), 
-									"Could not create:" + host_ + "/taxonomies/ma2/" + getTax(ResType.valueOf(name)) + nname, 
+									"Could not create:" + host_ + GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)) + nname, 
 									Toast.LENGTH_LONG).show();
 							throw e;
 						}

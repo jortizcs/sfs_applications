@@ -50,44 +50,38 @@ public class TXM {
 	 * Performs a StreamFS operation. If a network connection exists, sends the operation to StreamFS.
 	 * Otherwise, writes the operation to a local log
 	 */
-	public String performOp(String op, String path, JSONObject data) {
+	public String performOp(String op, String path, JSONObject data) throws Exception {
 		displayMsg("op: " + op + ", path: " + path + ", data: " + data.toString());
 		SfsCache cache = SfsCache.getInstance();
 		
-		try {
-			if(hasNetworkConnection()) {
-				displayMsg("Connected to network");
-				
-				if(op.equals("PUT"))
-					return CurlOpsReal.put(data.toString(), path);
-				if(op.equals("POST"))
-					return CurlOpsReal.post(data.toString(), path);
-				if(op.equals("GET"))
-					return CurlOpsReal.get(path);
-				if(op.equals("DELETE"))
-					return CurlOpsReal.delete(path);
-			}
-			else {
-				connected_ = false;
-				displayMsg("No network connection. Writing to log instead");
-				
-				FileOutputStream out = context_.openFileOutput(FILE, Context.MODE_APPEND);
-				JSONObject json = new JSONObject();
-				json.put("op", op);
-				json.put("path", path);
-				json.put("data", data);
-				json.put("ts", serverInitTime_ + System.currentTimeMillis() - localInitTime_);
-				json.put("type", cache.getEntry(path).has("links_to") ? "symlink" : cache.getEntry(path).getString("type"));
-				out.write(json.toString().getBytes());
-				out.close();
-			}
+		if(hasNetworkConnection()) {
+			displayMsg("Connected to network");
+			
+			if(op.equals("PUT"))
+				return CurlOpsReal.put(data.toString(), path);
+			if(op.equals("POST"))
+				return CurlOpsReal.post(data.toString(), path);
+			if(op.equals("GET"))
+				return CurlOpsReal.get(path);
+			if(op.equals("DELETE"))
+				return CurlOpsReal.delete(path);
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-			displayMsg("error");
+		else {
+			connected_ = false;
+			displayMsg("No network connection. Writing to log instead");
+			
+			FileOutputStream out = context_.openFileOutput(FILE, Context.MODE_APPEND);
+			JSONObject json = new JSONObject();
+			json.put("op", op);
+			json.put("path", path);
+			json.put("data", data);
+			json.put("ts", serverInitTime_ + System.currentTimeMillis() - localInitTime_);
+			json.put("type", cache.getEntry(path).has("links_to") ? "symlink" : cache.getEntry(path).getString("type"));
+			out.write(json.toString().getBytes());
+			out.close();
+			return cache.performOp(op, path, data).toString();
 		}
-		
-		return cache.performOp(op, path, data).toString();
+		return null;
 	}
 	
 	/**
@@ -130,7 +124,7 @@ public class TXM {
 			Toast.makeText(context_, msg, Toast.LENGTH_LONG).show();
 			System.out.println(msg);
 		}
-    }
+	}
 	
 	private boolean hasNetworkConnection() {
 		NetworkInfo ni = ((ConnectivityManager)context_.getSystemService(Activity.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
