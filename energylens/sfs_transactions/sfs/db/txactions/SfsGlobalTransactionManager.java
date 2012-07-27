@@ -4,6 +4,7 @@ import sfs.db.*;
 import java.net.*;
 import java.util.*;
 import java.io.*;
+import java.util.zip.*;
 
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
@@ -36,7 +37,7 @@ public class SfsGlobalTransactionManager implements Container{
 
     public static void main(String[] args){
         try {
-            SfsGlobalTransactionManager server = new SfsGlobalTransactionManager("", -1, "http");
+            SfsGlobalTransactionManager server = new SfsGlobalTransactionManager("ec2-184-169-204-224.us-west-1.compute.amazonaws.com", 8080, "http");
             //http
             Connection connection = new SocketConnection((Container)server);
             SocketAddress address = new InetSocketAddress(4896);
@@ -49,46 +50,84 @@ public class SfsGlobalTransactionManager implements Container{
 
     public void handle(Request request, Response response){
         try {
-        String method = request.getMethod();
-        if(method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("POST")){
-            JSONObject contentObj = (JSONObject)parser.parse(request.getContent());
-            String type = (contentObj.get("type")!=null)?((String)contentObj.get("type")):"";
-            JSONArray log = (contentObj.get("ops")!=null)?(JSONArray)contentObj.get("ops"):null;
-            if(type.equals("log")){
-                
-                //sort these by timestamp
-                JSONObject[] log_array = (JSONObject[])log.toArray();
-                Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
-                for(int i=0; i<log.size(); i++)
-                    applyAttempt(log_array[i]);
+            String method = request.getMethod();
+            if(method.equalsIgnoreCase("PUT") || method.equalsIgnoreCase("POST") ||
+                method.equalsIgnoreCase("DELETE")){
+                JSONObject contentObj = (JSONObject)parser.parse(request.getContent());
+                String type = (contentObj.get("type")!=null)?((String)contentObj.get("type")):"";
+                JSONArray log = (contentObj.get("ops")!=null)?(JSONArray)contentObj.get("ops"):null;
+                if(type.equals("log")){
+                    
+                    //sort these by timestamp
+                    JSONObject[] log_array = (JSONObject[])log.toArray();
+                    Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
+                    for(int i=0; i<log.size(); i++)
+                        applyAttempt(log_array[i]);
+                } else {
+                    applyAttempt(contentObj);
+                }
             } else {
-                applyAttempt(contentObj);
+                String urlStr = "http://" + sfsHttpHost + ":" + sfsHttpPort + request.getPath().getPath();
+                
+                logger.info(urlStr);
+                Query query = request.getQuery();
+                if(query!=null && !query.equals("")){
+                    urlStr += "?";
+                    Iterator<String> attrs = query.keySet().iterator();
+                    while(attrs.hasNext()){
+                        String val = attrs.next();
+                        urlStr += val +"="+(String)query.get(val);
+                        if(attrs.hasNext())
+                            urlStr += "&";
+                    }
+                }
+                URL url = new URL(urlStr);
+                logger.info(urlStr);
+
+                HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                conn.setRequestMethod(method.toUpperCase());
+                conn.setDoOutput(true);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                                conn.getInputStream()));
+                StringBuffer responseBuf = new StringBuffer();
+                String line = null;
+                while((line=reader.readLine())!=null)
+                    responseBuf.append(line);
+                logger.info(sfsHttpHost+":"+sfsHttpPort+" response::" + responseBuf.toString());
+                int statuscode = conn.getResponseCode();
+                conn.disconnect();
+                sendResponse(request, response, statuscode, responseBuf.toString());
             }
+        } catch(Exception e){
+            logger.log(Level.WARNING, "", e);
+            sendResponse(request, response, 404, null);
         }
+    }
+
+    public void applyAttempt(JSONObject sfsop){
+        try {
+            long ts = ((Long)sfsop.get("ts")).longValue();
+
+            //future operations relative to this one
+            //try to apply it in timestamp order
+            //  -- check the log, if it's the latest one, apply it, if not, resolve the conflict
+            JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
+
+            if(relFutureOps.size()>0){
+                rollback(relFutureOps);
+                apply(sfsop, true);
+                replay(relFutureOps);
+            } else {
+                apply(sfsop, true);
+            }
         } catch(Exception e){
             logger.log(Level.WARNING, "", e);
         }
     }
 
-    public void applyAttempt(JSONObject sfsop){
-        long ts = ((Long)sfsop.get("ts")).longValue();
-
-        //future operations relative to this one
-        //try to apply it in timestamp order
-        //  -- check the log, if it's the latest one, apply it, if not, resolve the conflict
-        JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
-
-        if(relFutureOps.size()>0){
-            rollback(relFutureOps);
-            apply(sfsop, true);
-            replay(relFutureOps);
-        } else {
-            apply(sfsop, true);
-        }
-    }
-
     /**
-     *
+     * 
      */
     public boolean apply(JSONObject sfsOp, boolean writeLog){
         try {
@@ -284,6 +323,34 @@ public class SfsGlobalTransactionManager implements Container{
                     return true;
             } catch(Exception e){}
             return false;
+        }
+    }
+
+    public static void sendResponse(Request request, Response response, int code, String data){
+        try {
+            long time = System.currentTimeMillis();
+            String enc = request.getValue("Accept-encoding");
+            boolean gzipResp = false;
+            if(enc!=null && enc.indexOf("gzip")>-1)
+                gzipResp = true;
+            response.set("Content-Type", "application/json");
+            response.set("Server", "StreamFS/2.0 (Simple 4.0)");
+            response.set("Connection", "close");
+            response.setDate("Date", time);
+            response.setDate("Last-Modified", time);
+            response.setCode(code);
+            PrintStream body = response.getPrintStream();
+            if(data!=null && !gzipResp)
+                body.println(data);
+            else if(data!=null && gzipResp){
+                response.set("Content-Encoding", "gzip");
+                GZIPOutputStream gzipos = new GZIPOutputStream(body);
+                gzipos.write(data.getBytes());
+                gzipos.close();
+            }
+            body.close();
+        } catch(Exception e){
+            e.printStackTrace();
         }
     }
 }

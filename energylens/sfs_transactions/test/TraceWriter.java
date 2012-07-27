@@ -15,14 +15,17 @@ public class TraceWriter{
         makeSample02();
         System.out.println("\n\n\n#####   unmakeSample02 #####");
         unmakeSample02();
-        System.out.println("\n\n\n#####   makeSample03 #####");
+        System.out.println("\n\n\n#####   makeSample03 and makeSample04 #####");
         makeSample03();
+        System.out.println("\n\n\n#####   makeSample05 #####");
+        makeSample05();
+        System.out.println("\n\n\n");
     }
 
     public static void makeSample01(){
         JSONObject s01 = new JSONObject();
         s01.put("operation", "create_resource");
-        s01.put("resourceName", "qrc");
+        s01.put("resourceName", "xactions_tests");
         s01.put("resourceType", "default");
         System.out.println(s01.toString());
     }
@@ -141,32 +144,26 @@ public class TraceWriter{
         Random rand = new Random();
         long opts = sfstime;// + rand.nextInt( );
         log.put("type", "log"); 
-        for(int i=0; i<10; i++){
+        for(int i=0; i<2; i++){
             JSONObject entry = new JSONObject();
             JSONObject data = new JSONObject();
             data.put("operation", "create_resource");
             data.put("resourceType", "default");
-            entry.put("ts", opts);
-            opts = opts + 2*(i+1);
             if(i==0){
-                data.put("resourceName", "spaces");
-                entry.put("path", path);
-            } else if(i==2){
-                data.put("resourceName", "dev");
-                entry.put("path", path);
-            } else {
-                data.put("resourceName", "PC" + (new Integer(i)).toString());
+                entry.put("path", path + "/dev/r2");
+                entry.put("ts", 1343286865);
+            } else if(i==1){
+                entry.put("ts", 1343286866);
                 entry.put("path", path + "/dev");
             }
-            entry.put("op", "put");
-            entry.put("data", data);
+            entry.put("op", "delete");
             ops.add(entry);
         }
         log.put("ops", ops);
         System.out.println(log.toString());
     }
 
-    public static void unmakeSample02(){
+    /*public static void unmakeSample02(){
         JSONObject log = new JSONObject();
         JSONArray ops = new JSONArray();
 
@@ -189,5 +186,5 @@ public class TraceWriter{
         }
         log.put("ops", ops);
         System.out.println(log.toString());
-    }
+    }*/
 }
