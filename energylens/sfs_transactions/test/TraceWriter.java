@@ -43,6 +43,7 @@ public class TraceWriter{
             data.put("operation", "create_resource");
             data.put("resourceType", "default");
             entry.put("ts", opts);
+            entry.put("type","default");
             opts = opts + 2*(i+1);
             if(i==0){
                 data.put("resourceName", "spaces");
@@ -54,7 +55,7 @@ public class TraceWriter{
                 data.put("resourceName", "PC" + (new Integer(i)).toString());
                 entry.put("path", path + "/dev");
             }
-            entry.put("op", "put");
+            entry.put("method", "put");
             entry.put("data", data);
             ops.add(entry);
         }
@@ -80,7 +81,7 @@ public class TraceWriter{
             } else {
                 entry.put("path", path + "/dev/PC" + (new Integer(i)).toString());
             }
-            entry.put("op", "delete");
+            entry.put("method", "delete");
             ops.add(entry);
         }
         log.put("ops", ops);
@@ -122,9 +123,9 @@ public class TraceWriter{
                 data2.put("resourceName", "r" + (new Integer(i+1)).toString());
                 entry2.put("path", path + "/dev");
             }
-            entry.put("op", "put");
+            entry.put("method", "put");
             entry.put("data", data);
-            entry2.put("op", "put");
+            entry2.put("method", "put");
             entry2.put("data", data2);
             ops.add(entry);
             ops2.add(entry2);
@@ -156,7 +157,7 @@ public class TraceWriter{
                 entry.put("ts", 1343286866);
                 entry.put("path", path + "/dev");
             }
-            entry.put("op", "delete");
+            entry.put("method", "delete");
             ops.add(entry);
         }
         log.put("ops", ops);
