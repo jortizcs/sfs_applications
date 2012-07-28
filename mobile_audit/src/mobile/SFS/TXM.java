@@ -51,20 +51,20 @@ public class TXM {
 	 * Otherwise, writes the operation to a local log
 	 */
 	public String performOp(String op, String path, JSONObject data) throws Exception {
-		displayMsg("op: " + op + ", path: " + path + ", data: " + data.toString());
+		//displayMsg("op: " + op + ", path: " + path + ", data: " + data.toString());
 		SfsCache cache = SfsCache.getInstance();
 		
 		if(hasNetworkConnection()) {
 			displayMsg("Connected to network");
 			
 			if(op.equals("PUT"))
-				return CurlOpsReal.put(data.toString(), path);
+				CurlOpsReal.put(data.toString(), path);
 			if(op.equals("POST"))
-				return CurlOpsReal.post(data.toString(), path);
+				CurlOpsReal.post(data.toString(), path);
 			if(op.equals("GET"))
-				return CurlOpsReal.get(path);
+				CurlOpsReal.get(path);
 			if(op.equals("DELETE"))
-				return CurlOpsReal.delete(path);
+				CurlOpsReal.delete(path);
 		}
 		else {
 			connected_ = false;
@@ -72,16 +72,15 @@ public class TXM {
 			
 			FileOutputStream out = context_.openFileOutput(FILE, Context.MODE_APPEND);
 			JSONObject json = new JSONObject();
-			json.put("op", op);
+			json.put("method", op);
 			json.put("path", path);
 			json.put("data", data);
 			json.put("ts", serverInitTime_ + System.currentTimeMillis() - localInitTime_);
 			json.put("type", cache.getEntry(path).has("links_to") ? "symlink" : cache.getEntry(path).getString("type"));
 			out.write(json.toString().getBytes());
 			out.close();
-			return cache.performOp(op, path, data).toString();
 		}
-		return null;
+		return cache.performOp(op, path, data).toString();
 	}
 	
 	/**

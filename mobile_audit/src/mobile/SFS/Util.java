@@ -31,13 +31,17 @@ public class Util {
 		return huc.getResponseCode();
 	}
 	
-	public static boolean isExistingResource(String url) {
+	/*public static boolean isExistingResource(String url) {
 		try {
 			return getResponseCode(url) != 404;
 		}
 		catch(IOException e) {
 			return false;
 		}
+	}*/
+	
+	public static boolean isExistingResource(String url) {
+		return SfsCache.getInstance().getEntry(url.replaceFirst(GlobalConstants.HOST, "")) != null;
 	}
 	
 	public static String createResource(String name, String type, String targetUrl) throws Exception, JSONException {
@@ -126,7 +130,7 @@ public class Util {
 	public static JSONArray getIncidentPaths(String url){
 		try {
 			Log.i("UTIL", "getting incident paths: " + url + "?incident_paths=true");
-			String respStr = CurlOps.get(url  + "?incident_paths=true");
+			String respStr = CurlOpsReal.get(url  + "?incident_paths=true");
 			Log.i("UTIL", "respStr=" + respStr);
 		
 			JSONObject obj = new JSONObject(respStr);
@@ -134,6 +138,7 @@ public class Util {
 				return obj.getJSONArray("paths");
 		} catch(Exception e){
 			Log.d("UTIL", "Problem getting incident paths");
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -244,6 +249,7 @@ public class Util {
 	    						subpath.append("/").append(thisPathTokVec.get(j));
 	    					}
 	    					Log.i("UTIL", "\tsubpath[" + k + "]=" + subpath.toString());
+	    					System.out.println("subpath: " + subpath);
 	    					String resp = CurlOps.get(GlobalConstants.HOST + subpath);
 	    					
 	    					if(resp!=null){

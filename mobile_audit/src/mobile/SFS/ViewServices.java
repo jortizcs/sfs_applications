@@ -3,14 +3,15 @@ package mobile.SFS;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
-import android.util.Log;
-import android.net.Uri;
 
 
 public class ViewServices extends Activity {
+	private static final String GRAPH_HOME = "http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com/grapher";
 	
 	private String currLocStr =null;
 	private String url=null;
@@ -29,6 +30,15 @@ public class ViewServices extends Activity {
 			Log.i("WebViewIntent", "url=" + url);
 			
 			String urlstr = getIntent().getStringExtra("url");
+	/*JSONArray arr = new JSONObject(CurlOps.get(urlstr)).getJSONArray("children");
+			
+			if(arr != null && arr.length() == 1) {
+				arr = new JSONObject(CurlOps.get(arr.getJSONObject(0).toString())).getJSONArray("children");
+				if(arr != null && arr.length() == 1) {
+					urlstr = arr.getJSONObject(0)
+				}
+			}*/
+			
 	        Uri uri = Uri.parse(urlstr);
 	        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 	        intent.putExtra("curr_loc", currLocStr);

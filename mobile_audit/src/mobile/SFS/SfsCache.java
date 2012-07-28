@@ -94,6 +94,11 @@ public class SfsCache implements Cache {
 		map_.remove(path);
 	}
 	
+	/**
+	 * 
+	 * @param path
+	 * @return the JSONObject at the specified path, or null if no such path exists
+	 */
 	public JSONObject getEntry(String path) {
 		return map_.get(path);
 	}

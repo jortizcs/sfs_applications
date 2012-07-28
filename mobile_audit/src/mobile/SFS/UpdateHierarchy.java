@@ -96,6 +96,7 @@ public class UpdateHierarchy extends Activity {
 			switch(requestCode) {
 				case 0: {
 					root_ = Util.getUriFromQrc(CurlOps.getQrcFromUrl(intent.getStringExtra("SCAN_RESULT")));
+					System.out.println("finalIntent: " + finalIntent_);
 					
 					Intent next = new Intent("com.google.zxing.client.android.SCAN");
 					next.putExtra("SCAN_MODE", "QR_CODE_MODE");
@@ -107,7 +108,7 @@ public class UpdateHierarchy extends Activity {
 					String node = Util.getUriFromQrc(CurlOps.getQrcFromUrl(intent.getStringExtra("SCAN_RESULT")));
 					
 					Log.i("UpdateHierarchy", "Root=" + root_ + "\tNode=" + node);
-					
+					System.out.println("finalIntent: " + finalIntent_);
 					finalIntent_.putExtra("root", root_);
 					finalIntent_.putExtra("node", node);
 					finalIntent_.putExtra("curr_loc", currLocString_);
