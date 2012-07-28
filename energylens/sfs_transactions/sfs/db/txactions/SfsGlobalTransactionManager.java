@@ -85,14 +85,24 @@ public class SfsGlobalTransactionManager implements Container{
                     Object[] log_array_o = log.toArray();
                     JSONObject[] log_array = Arrays.copyOf(log_array_o, log_array_o.length, JSONObject[].class);
                     Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
-                    for(int i=0; i<log.size(); i++)
+                    for(int i=0; i<log.size(); i++){
+                        logger.info("FUNCTION_CALL::applyAttempt(request, response, log_array[i]=" + log_array[i].toString() + ")");
                         applyAttempt(request, response, log_array[i]);
+                    }
+                    //sendResponse(request,response,200,null);
+                    //return;
                 } else {
                     JSONObject entry = new JSONObject();
                     long ts = (sfs_inittime + (System.currentTimeMillis()/1000 - local_inittime));
                     entry.put("ts", ts);
                     entry.put("path", request.getPath().getPath());
                     entry.put("method", request.getMethod());
+                    if(((String)contentObj.get("operation")).equalsIgnoreCase("create_resource"))
+                        entry.put("type", "default");
+                    else if(((String)contentObj.get("operation")).equalsIgnoreCase("create_generic_resource"))
+                        entry.put("type", "stream");
+                    else
+                        entry.put("type", "symlink");
                     entry.put("data", contentObj);
                     applyAttempt(request, response, entry);
                 }
@@ -102,10 +112,10 @@ public class SfsGlobalTransactionManager implements Container{
                 entry.put("ts", ts);
                 entry.put("path", request.getPath().getPath());
                 entry.put("method", request.getMethod());
+                entry.put("type", getType(request.getPath().getPath()));
                 applyAttempt(request, response, entry);
             } else {
                 String urlStr = "http://" + sfsHttpHost + ":" + sfsHttpPort + request.getPath().getPath();
-                
                 logger.info(urlStr);
                 Query query = request.getQuery();
                 logger.info("query-> " + query);
@@ -144,7 +154,6 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     public void applyAttempt(Request request, Response response, JSONObject sfsop){
-        logger.info("applyAttemp::sfsop=" + sfsop.toString());
         try {
             long ts = ((Long)sfsop.get("ts")).longValue();
 
@@ -153,13 +162,17 @@ public class SfsGlobalTransactionManager implements Container{
             //  -- check the log, if it's the latest one, apply it, if not, resolve the conflict
             JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
             logger.info("futureOps:: " + relFutureOps.toString());
+            
+            
 
             if(relFutureOps.size()>0){
                 rollback(relFutureOps);
-                apply(request, response, sfsop, true /* writeLog*/, false /*forwardSfsReplyToClient*/);
+                apply(request, response, sfsop, null, 
+                        true /* writeLog*/, false /*forwardSfsReplyToClient*/);
                 replay(relFutureOps);
+                sendResponse(request, response, 200, null);
             } else {
-                apply(request, response, sfsop, true /* writeLog*/, true /*forwardSfsReplyToClient*/);
+                apply(request, response, sfsop,null, true /* writeLog*/, true /*forwardSfsReplyToClient*/);
             }
         } catch(Exception e){
             logger.log(Level.WARNING, "", e);
@@ -169,18 +182,21 @@ public class SfsGlobalTransactionManager implements Container{
     /**
      * 
      */
-    public boolean apply(Request req, Response resp, JSONObject sfsOp, boolean writeLog, 
+    public boolean apply(Request req, Response resp, JSONObject sfsOp, JSONObject negOp, boolean writeLog, 
             boolean forwardSfsReplyToClient){
         int responseCode = 404;
+        HttpURLConnection conn=null;
         try {
-            logger.info("sfsOp::" + sfsOp);
-            String path = cleanPath((String)sfsOp.get("path"));
-            String method = (String)sfsOp.get("method");
-            JSONObject data = (JSONObject) sfsOp.get("data");
+            JSONObject serverOp = (negOp==null)?sfsOp:negOp;
+            logger.info("serverOp::" + serverOp);
+            String path = cleanPath((String)serverOp.get("path"));
+            String method = (String)serverOp.get("method");
+            JSONObject data = (JSONObject) serverOp.get("data");
             URL url = new URL("http://" + sfsHttpHost + ":" + sfsHttpPort + path);
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            conn = (HttpURLConnection)url.openConnection();
             conn.setRequestMethod(method.toUpperCase());
-            conn.setDoOutput(true);
+            if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post"))
+                conn.setDoOutput(true);
             conn.connect();
 
             if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post")){
@@ -198,12 +214,10 @@ public class SfsGlobalTransactionManager implements Container{
             responseCode = conn.getResponseCode();
             if(forwardSfsReplyToClient)
                 sendResponse(req, resp, responseCode, response.toString());
-            conn.disconnect();
 
             //log it if the operation was successful in StreamFS
             if(method.equalsIgnoreCase("delete") && responseCode==200){
                 logger.info("method=delete; writeLog=" + writeLog);
-                String pathType = getType((String)sfsOp.get("path"));
                 if(writeLog)
                     log(sfsOp);
                 else
@@ -212,18 +226,11 @@ public class SfsGlobalTransactionManager implements Container{
             } else if(method.equalsIgnoreCase("put") || method.equalsIgnoreCase("post")) {
                 String sfsOpString = (String)data.get("operation");
                 if(sfsOpString.startsWith("create_")&& responseCode==201){
-                    if(sfsOpsString.equalsIgnoreCase("create_resource"))
-                        sfsOp.put("type", "default");
-                    else
-                        sfsOp.put("type", "stream");
-
                     //what type of resource is in there
-                    if(writeLog){
+                    if(writeLog)
                         log(sfsOp);
-                    }
-                    else{
+                    else
                         unlog(sfsOp);
-                    }
                     return true;
                 } else {
                     logger.warning("NOT_APPLIED::"+sfsOpString);
@@ -235,6 +242,9 @@ public class SfsGlobalTransactionManager implements Container{
             }
         } catch(Exception e){
             logger.log(Level.WARNING, "", e);
+        } finally {
+            if(conn!=null)
+                conn.disconnect();
         }
         if(forwardSfsReplyToClient)
             sendResponse(req, resp, responseCode, null);
@@ -254,13 +264,13 @@ public class SfsGlobalTransactionManager implements Container{
             String method = (String)entry.get("method");
             JSONObject data=null;
             String sfsoperation =null;
-            String type=null;
+            String type= (String)entry.get("type");
             if(!method.equalsIgnoreCase("delete")){
                 data = (JSONObject)entry.get("data");
                 sfsoperation = (String)data.get("operation");
-                type = (String)entry.get("type");
+                type= (String)entry.get("type");
             }
-
+ 
             //negoq entries
             long negop_ts = ((Long)entry.get("ts")).longValue();
             String negop_method = null;
@@ -272,6 +282,11 @@ public class SfsGlobalTransactionManager implements Container{
                     sfsoperation.equalsIgnoreCase("create_generic_resource") ||
                     sfsoperation.equalsIgnoreCase("create_symlink")){
                     negop_method = "DELETE";
+                    String name = (String)data.get("resourceName");
+                    if(name==null)
+                        name = (String)data.get("name");
+                    negop_path += "/" + name;
+                    negop_path = cleanPath(negop_path);
                 }
             } else if(method.equalsIgnoreCase("delete")){
                 if(type.equals("default")){
@@ -304,12 +319,16 @@ public class SfsGlobalTransactionManager implements Container{
             JSONObject negop = new JSONObject();
             negop.put("method", negop_method);
             negop.put("path", negop_path);
+            negop.put("ts", negop_ts);
             if((negop_method.equalsIgnoreCase("put") || negop_method.equalsIgnoreCase("post")) &&
                 negop_data!=null){
                 negop.put("data", negop_data);
-                apply(null, null, negop, false, false);
+                logger.info("1\t" + negop.toString());
+                System.exit(1);
+                apply(null, null, entry, negop, false, false);
             } else if(negop_method.equalsIgnoreCase("delete")){
-                apply(null, null, negop, false, false);
+                logger.info("2\t" + negop.toString());
+                apply(null, null, entry, negop, false, false);
             } else {
                 logger.warning("could not rollback::" + entry.toString());
             }
@@ -317,6 +336,15 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     public void replay(JSONArray ops){
+        if(ops!=null){
+            for(int i=0; i<ops.size(); i++){
+                JSONObject entry = (JSONObject)ops.get(i);
+                System.out.println("REPLAY::entry=" + entry.toString());
+                apply(null, null, entry, null/* negop */, 
+                        true /* writeLog */,
+                        false /* forward reply to client */);
+            }
+        }
     }
 
     private synchronized void log(JSONObject sfsop){
@@ -324,10 +352,12 @@ public class SfsGlobalTransactionManager implements Container{
     }
 
     private synchronized void unlog(JSONObject sfsop){
+        /*if(((String)sfsop.get("method")).equalsIgnoreCase("delete"))
+            sfsop.put("method", "PUT");*/
         mysqldb.removeFromLog(sfsop);
     }
 
-    private String getParent(String path){
+    private static String getParent(String path){
         logger.info("Getting parent of " + path);
         if(path==null || path.equals("/")){
             logger.info("Returning NULL::" + path + " has no parent");
@@ -347,7 +377,7 @@ public class SfsGlobalTransactionManager implements Container{
         return parentPathBuffer.toString();
     }
 
-    private String cleanPath(String path){
+    private static String cleanPath(String path){
         //clean up the path
         if(path == null)
             return path;
@@ -398,16 +428,16 @@ public class SfsGlobalTransactionManager implements Container{
         }
     }
 
-    private class String getType(String path){
+    private String getType(String path){
         try {
             String linksTo = getLink(path);
-            if(linksTo!=null)
-                return "symlink";
+            if(linksTo!=null){
+                return "symlink";}
             else {
                 String resp = get(path);
                 if(resp!=null){
                     JSONObject respObj = (JSONObject)parser.parse(resp);
-                    if(respObj.containsKey("pubid")
+                    if(respObj.containsKey("pubid"))
                         return "stream";
                     return "default";
                 }
@@ -418,7 +448,7 @@ public class SfsGlobalTransactionManager implements Container{
         return null;
     }
 
-    private static String get(path){
+    private static String get(String path){
         HttpURLConnection conn=null;
         try {
             path = cleanPath(path);
@@ -427,7 +457,7 @@ public class SfsGlobalTransactionManager implements Container{
             if(path !=null && !path.equals("/")) {
                 URL url = new URL("http://" + sfsHttpHost + ":" + sfsHttpPort + path);
                 conn = (HttpURLConnection)url.openConnection();
-                conn.setRequestMethod(method.toUpperCase());
+                conn.setRequestMethod("GET");
                 conn.connect();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -441,9 +471,9 @@ public class SfsGlobalTransactionManager implements Container{
                 return respObj.toString();
             }
         } catch(Exception e) {
-            Log.e(SfsCache.class.getName(), "", e);
+            logger.log(Level.WARNING, "", e);
         } finally{
-            if(conn!=null && conn.connected())
+            if(conn!=null)
                 conn.disconnect();
         }
         return null;
@@ -454,8 +484,7 @@ public class SfsGlobalTransactionManager implements Container{
             path = cleanPath(path);
             if(path.equals("/"))
                 return null;
-            String parent = getParent(path);
-            String child = path.substring(path.lastIndexOf("/")+1, path.length());
+            String parent = null;
             if(path !=null && !path.equals("/")) {
                 StringBuffer buf = new StringBuffer();
                 StringTokenizer tokenizer = new StringTokenizer(path, "/");
@@ -470,11 +499,11 @@ public class SfsGlobalTransactionManager implements Container{
                 //GET parent 
                 String parentResp = get(parent);
                 if(parentResp!=null){
-                    JSONObject respObj = parser.parse(parentResp);
+                    JSONObject respObj = (JSONObject)parser.parse(parentResp);
                     JSONArray children = (JSONArray)respObj.get("children");
-                    for(int j=0; j<children.length(); j++) {
-                        if(children.getString(j).startsWith(child) && children.getString(j).contains("->")) { //not guaranteed to work
-                            tokenizer = new StringTokenizer(children.getString(j), " -> ");
+                    for(int j=0; j<children.size(); j++) {
+                        if(((String)children.get(j)).startsWith(child) && ((String)children.get(j)).contains("->")) { //not guaranteed to work
+                            tokenizer = new StringTokenizer((String)children.get(j), " -> ");
                             tokenizer.nextToken();
                             return tokenizer.nextToken();
                         }
@@ -482,7 +511,7 @@ public class SfsGlobalTransactionManager implements Container{
                 }
             }
         } catch(Exception e) {
-            Log.e(SfsCache.class.getName(), "", e);
+            logger.log(Level.WARNING, "", e);
         }
         return null;
     }
@@ -511,7 +540,7 @@ public class SfsGlobalTransactionManager implements Container{
             }
             body.close();
         } catch(Exception e){
-            e.printStackTrace();
+            logger.log(Level.WARNING, "", e);
         }
     }
 }
