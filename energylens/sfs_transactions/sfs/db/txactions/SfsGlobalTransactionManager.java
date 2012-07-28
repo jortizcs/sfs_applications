@@ -87,10 +87,11 @@ public class SfsGlobalTransactionManager implements Container{
                     Arrays.sort(log_array, new LogEntryComparator<org.json.simple.JSONObject>());
                     for(int i=0; i<log.size(); i++){
                         logger.info("FUNCTION_CALL::applyAttempt(request, response, log_array[i]=" + log_array[i].toString() + ")");
-                        applyAttempt(request, response, log_array[i]);
+                        applyAttempt(request, response, log_array[i], false);
                     }
-                    //sendResponse(request,response,200,null);
-                    //return;
+                   
+                    sendResponse(request,response,200,null);
+                    return;
                 } else {
                     JSONObject entry = new JSONObject();
                     long ts = (sfs_inittime + (System.currentTimeMillis()/1000 - local_inittime));
@@ -104,7 +105,7 @@ public class SfsGlobalTransactionManager implements Container{
                     else
                         entry.put("type", "symlink");
                     entry.put("data", contentObj);
-                    applyAttempt(request, response, entry);
+                    applyAttempt(request, response, entry, true);
                 }
             } else if( method.equalsIgnoreCase("DELETE")){
                 JSONObject entry = new JSONObject();
@@ -113,7 +114,7 @@ public class SfsGlobalTransactionManager implements Container{
                 entry.put("path", request.getPath().getPath());
                 entry.put("method", request.getMethod());
                 entry.put("type", getType(request.getPath().getPath()));
-                applyAttempt(request, response, entry);
+                applyAttempt(request, response, entry, true);
             } else {
                 String urlStr = "http://" + sfsHttpHost + ":" + sfsHttpPort + request.getPath().getPath();
                 logger.info(urlStr);
@@ -153,7 +154,8 @@ public class SfsGlobalTransactionManager implements Container{
         }
     }
 
-    public void applyAttempt(Request request, Response response, JSONObject sfsop){
+    public void applyAttempt(Request request, Response response, JSONObject sfsop, 
+            boolean forwardSfsReplyToClient){
         try {
             long ts = ((Long)sfsop.get("ts")).longValue();
 
@@ -163,16 +165,13 @@ public class SfsGlobalTransactionManager implements Container{
             JSONArray relFutureOps = mysqldb.getAllOpsAfter(ts);
             logger.info("futureOps:: " + relFutureOps.toString());
             
-            
-
             if(relFutureOps.size()>0){
                 rollback(relFutureOps);
                 apply(request, response, sfsop, null, 
-                        true /* writeLog*/, false /*forwardSfsReplyToClient*/);
+                        true /* writeLog*/, forwardSfsReplyToClient);
                 replay(relFutureOps);
-                sendResponse(request, response, 200, null);
             } else {
-                apply(request, response, sfsop,null, true /* writeLog*/, true /*forwardSfsReplyToClient*/);
+                apply(request, response, sfsop,null, true /* writeLog*/, forwardSfsReplyToClient);
             }
         } catch(Exception e){
             logger.log(Level.WARNING, "", e);

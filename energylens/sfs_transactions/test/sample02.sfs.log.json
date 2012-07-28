@@ -1,1 +1,126 @@
-{"type":"log","ops":[{"ts":1343286861,"data":{"operation":"create_resource","resourceName":"spaces","resourceType":"default"},"path":"\/xactions_tests","method":"put","type":"default"},{"ts":1343286863,"data":{"operation":"create_resource","resourceName":"PC1","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286867,"data":{"operation":"create_resource","resourceName":"dev","resourceType":"default"},"path":"\/xactions_tests","method":"put","type":"default"},{"ts":1343286873,"data":{"operation":"create_resource","resourceName":"PC3","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286881,"data":{"operation":"create_resource","resourceName":"PC4","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286891,"data":{"operation":"create_resource","resourceName":"PC5","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286903,"data":{"operation":"create_resource","resourceName":"PC6","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286917,"data":{"operation":"create_resource","resourceName":"PC7","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286933,"data":{"operation":"create_resource","resourceName":"PC8","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"},{"ts":1343286951,"data":{"operation":"create_resource","resourceName":"PC9","resourceType":"default"},"path":"\/xactions_tests\/dev","method":"put","type":"default"}]}
+{
+    "type": "log",
+    "ops": [
+        {
+            "ts": 1343286850,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "xactions_tests",
+                "resourceType": "default"
+            },
+            "path": "/",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286861,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "spaces",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286863,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC1",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286867,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "dev",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286873,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC3",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286881,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC4",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286891,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC5",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286903,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC6",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286917,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC7",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286933,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC8",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        },
+        {
+            "ts": 1343286951,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "PC9",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests/dev",
+            "method": "put",
+            "type": "default"
+        }
+    ]
+}
