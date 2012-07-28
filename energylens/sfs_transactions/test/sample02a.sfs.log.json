@@ -1,0 +1,16 @@
+{
+    "type": "log",
+    "ops": [
+        {
+            "ts": 1343286861,
+            "data": {
+                "operation": "create_resource",
+                "resourceName": "spaces",
+                "resourceType": "default"
+            },
+            "path": "/xactions_tests",
+            "method": "put",
+            "type": "default"
+        }
+    ]
+}

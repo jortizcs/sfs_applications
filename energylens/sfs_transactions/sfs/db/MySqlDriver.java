@@ -164,16 +164,35 @@ public class MySqlDriver {
         Connection conn=null;
         try {
             conn = openConn();
-            String method = (String)op.get("op");
+            String method = (String)op.get("method");
             String path = (String)op.get("path");
-            String sfsop = ((JSONObject)op.get("data")).toString();
-            long ts = ((Long)op.get("ts")).longValue();
-            String query = "Insert into `sfs_txlog` (`method`, `path`, `sfsop`, `timestamp`) values(?, ?, ? ?)";
-            PreparedStatement ps = conn.prepareStatement(query);
-            ps.setString(1, method);
-            ps.setString(2, path);
-            ps.setString(3, sfsop);
-            ps.setLong(4, ts);
+            String type = (String)op.get("type");
+            String sfsop = null;
+            PreparedStatement ps=null;
+            if(!method.equalsIgnoreCase("delete")){
+                sfsop = ((JSONObject)op.get("data")).toString();
+                long ts = ((Long)op.get("ts")).longValue();
+                String query = "Insert into `sfs_txlog` (`method`, `path`, `type`, `sfsop`, `timestamp`) values(?,?, ?, ?,?)";
+                ps = conn.prepareStatement(query);
+                ps.setString(1, method);
+                ps.setString(2, path);
+                ps.setString(3, type);
+                ps.setString(4, sfsop);
+                ps.setLong(5, ts);
+                logger.info(query.replaceFirst("\\?", "\"" + method + "\"").replaceFirst("\\?", "\""+ path+ "\"").replaceFirst("\\?", "\""+ type + "\"").
+                            replaceFirst("\\?", "\""+ sfsop + "\"").
+                            replaceFirst("\\?", (new Long(ts)).toString()));
+            } else {
+                long ts = ((Long)op.get("ts")).longValue();
+                String query = "Insert into `sfs_txlog` (`method`, `path`, `type`, `timestamp`) values(?,?,?,?)";
+                ps = conn.prepareStatement(query);
+                ps.setString(1, method);
+                ps.setString(2, path);
+                ps.setString(3, type);
+                ps.setLong(4, ts);
+                logger.info(query.replaceFirst("\\?", "\"" + method + "\"").replaceFirst("\\?", "\""+ path+ "\"").replaceFirst("\\?", "\""+ type + "\"").
+                            replaceFirst("\\?", (new Long(ts)).toString()));
+            }
             ps.executeUpdate();
         } catch(Exception e){
             logger.log(Level.WARNING, "",e);
@@ -186,24 +205,27 @@ public class MySqlDriver {
         Connection conn=null;
         try {
             conn = openConn();
-            String method = (String)op.get("op");
+            String method = (String)op.get("method");
             String path = (String)op.get("path");
-            String sfsop = ((JSONObject)op.get("data")).toString();
             long ts = ((Long)op.get("ts")).longValue();
             int id = (op.get("id")!=null)?((Integer)op.get("id")).intValue():-1;
             String query =null;
             if(id==-1)
-                query = "Remove from `sfs_txlog` where `method`=? and `path`=? and `sfsop`=?";
+                query = "delete from `sfs_txlog` where `method`=? and `path`=? and `timestamp`=?";
             else 
-                query = "Remove from `sfs_txlog` where `id`=?";
+                query = "delete from `sfs_txlog` where `id`=?";
 
             PreparedStatement ps = conn.prepareStatement(query);
             if(id==-1){
+                
                 ps.setString(1, method);
                 ps.setString(2, path);
-                ps.setString(3, sfsop);
-                ps.setLong(4, ts);
+                ps.setLong(3, ts);
+
+                logger.info("QUERY::" + query.replaceFirst("\\?", method).replaceFirst("\\?", path).
+                                            replaceFirst("\\?", (new Long(ts)).toString()));
             } else {
+                logger.info("QUERY::" + query.replaceFirst("\\?", (new Integer(id)).toString()));
                 ps.setInt(1, id);     
             }
             ps.executeUpdate();
@@ -218,7 +240,7 @@ public class MySqlDriver {
         Connection conn=null;
         try {
             conn = openConn();
-            String query = "Remove from `sfs_txlog` where `ts`>?";
+            String query = "delete from `sfs_txlog` where `timestamp`>?";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setLong(1, timestamp);
             ps.executeUpdate();
@@ -248,18 +270,24 @@ public class MySqlDriver {
         JSONArray ops = new JSONArray();
         try {
             conn = openConn();
-            String query = "select `id`,`method`, `path`, `sfsop`, `timestamp` from `sfs_txlog` where `ts`>?";
+            String query = "select `id`,`method`, `path`, `type`,`sfsop`, `timestamp` from `sfs_txlog` where `timestamp`>?";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setLong(1, timestamp);
             ResultSet rs = ps.executeQuery();
             while(rs.next()){
                 try {
                     JSONObject entry = new JSONObject();
+                    String method=rs.getString("method");
                     entry.put("id", rs.getInt("id"));
+                    entry.put("method", method);
+                    entry.put("path", rs.getString("path"));
+                    entry.put("type", rs.getString("type"));
+                    entry.put("sfsop", rs.getString("sfsop"));
                     entry.put("ts", rs.getLong("timestamp"));
-                    entry.put("op", rs.getString("method"));
-                    JSONObject sfsops = (JSONObject)parser.parse(rs.getString("sfsop"));
-                    entry.put("data",sfsops);
+                    if(!method.equalsIgnoreCase("delete")){
+                        JSONObject sfsops = (JSONObject)parser.parse(rs.getString("sfsop"));
+                        entry.put("data",sfsops);
+                    }
                     ops.add(entry);
                 } catch(Exception e){
                     logger.log(Level.WARNING, "", e);

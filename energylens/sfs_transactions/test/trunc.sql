@@ -1,0 +1,1 @@
+truncate sfs_txlog
