@@ -1,5 +1,8 @@
 *{
-  font-family: "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;
+  /*font-family: "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;*/
+  font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+  font-size:0.95em;
+  line-height:1.7em;
 }
 
 
@@ -19,13 +22,18 @@ a:hover {
 }
 
 /*Main Containers*/
+html {
+  min-height: 100%;
+  height: 100%;
+  position: relative;
+}
 
 body {
+  min-height:100%;
   max-width:100%;
   min-width:200px;
   margin:0 auto;
   padding:0;
-  position:relative;
 }
 
 #wrap{
@@ -36,14 +44,17 @@ body {
 #masthead{
   height: 100px;
   width:100%;
-  background:#003399 url(./img/highlight.png) no-repeat top left;
+  background: black no-repeat top left;
+  background: url(img/px_by_Gre3g.png);
 }
 
 #masthead_bg {
-  background-color:#003399; 
+  background-color: black; 
   height: 100px;
   width:100%;
   position:absolute;
+  box-shadow: 0 3px 6px -3px rgba(0,0,0,0.7);
+  background: url(img/px_by_Gre3g.png);
 }
 
 #masthead nav {
@@ -65,6 +76,9 @@ nav a{
 }
 /* Player */
 /*http://stackoverflow.com/questions/1776915/how-to-center-absolute-element-in-div*/
+#phone {
+  margin-top:-24px;
+}
 #play_btn {
   transition: all 0.7s;
   -moz-transition: all 0.7s; /* Firefox 4 */
@@ -74,6 +88,7 @@ nav a{
   width:135px;
   height:135px;
   position:absolute;
+  top:  48px;
   left:0;
   right:0;
   margin: 125px auto 0 auto;
@@ -92,9 +107,11 @@ nav a{
 /*Spotlight Containers*/
 #tagline {
   color:#666666;
-  font-family: "Book Antiqua", "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;
+  font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+  /*font-family: "Book Antiqua", "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;*/
   font-size:24px;
   float:left;
+  text-align: center;
 }
 
 #gplay_btn{
@@ -109,14 +126,13 @@ nav a{
 }
 
 #left_section article {
-  width:145px;
-  float:left;
+ 
 }
 
 #left_section article h2 {
   text-align:center;
 }
-#left_section article {margin-left: 30px;}
+#left_section article {/*margin-left: 30px;*/}
 #left_section article:first-of-type {
   margin-left:0 !important;
 }
@@ -131,7 +147,7 @@ section a{
 
 section h2 {
   font-size:18px;
-  font-weight:600;
+  font-weight:500;
 }
 
 #left_section {
@@ -142,6 +158,7 @@ section h2 {
 }
 
 #right_section {
+  position:relative;
   width:418px;
   max-width:48%;
   min-height:480px;
@@ -152,9 +169,13 @@ section h2 {
 /*Footer*/
 
 footer {
-  position:relative;
-  bottom:0px;
+  position:absolute;
+  bottom:0;
   min-height:30px;
+  margin:0 auto;
+  width: 960px;
+  left:0;
+  right:0;
 }
 
 footer a,
@@ -170,7 +191,10 @@ footer p {
 #footer_line{
   position:absolute;
   bottom:0;
-  width:100%;
+  max-width:100%;
+  width:960px;
+  font-size:0.7em;
+  padding: 10px 0;
 }
 p#copyright,
 footer ul li {
@@ -197,7 +221,46 @@ footer ul{
 #powered_by img:hover {
   opacity:0.6;
 }
+#cred_dialog {
+    position: absolute;
+    margin : auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    width: 300px;
+    height: 300px;
+    padding: 10px;
+    border-radius: 5px;
+    display:none;
+    border: 1px solid #454545;
+    z-index: 10;
+}
 
+#cred_dialog ul {
+  padding-left:0;
+}
+
+#cred_dialog li {
+  list-style:none;
+  margin: 1em;
+  margin-left:0;
+}
+
+#overlay {
+  position:fixed;
+  /*min-width: 900px;*/
+  /*min-height: 909px;*/
+  width: 100%;
+  height: 100%;
+  background: black;
+  /*background:rgba(0,0,0, 0.8);*/
+  opacity:0.8;
+  top: 0;
+  display:none;
+  
+}
 /* Clearfix */
 /* http://css-tricks.com/snippets/css/clear-fix/ */
 .clearfix:after {
@@ -208,5 +271,15 @@ footer ul{
   clear: both;
   height: 0;
   }
+  
+span.clothes {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5em;
+    line-height: 0.5em;
+    box-shadow: 0 0 2px rgba(0,0,0,0.7);
+    cursor: pointer;
+} 
 * html .clearfix             { zoom: 1; } /* IE6 */
 *:first-child+html .clearfix { zoom: 1; } /* IE7 */
