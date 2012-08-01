@@ -88,6 +88,7 @@ public class UpdateHierarchy extends Activity {
 					}
 				}
 				
+				System.out.println("finalIntent: " + finalIntent_);
 				intent = new Intent("com.google.zxing.client.android.SCAN");
 				intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
 				intent.putExtra("arg", (arg2 < 4 ? "Meter" : "Node"));

@@ -121,9 +121,9 @@ public class AddMeter extends Activity {
 								" to new meter (" + METER_REG_URL + "/" + name + ")");
 					} catch(Exception e){
 						Log.i("AddResource.onActivityResult", "Exists? " + uri_ + "/inventory/" + name);
-						if(!Util.isExistingResource(host_ + uri_ + "/inventory/" + name)){
+						if(!Util.isExistingResource(host_ + METER_REG_URL + "/" + name)){
 							Log.i("AddResource.onActivityResult", "Exists? NO");
-							Toast.makeText(getApplicationContext(), "Could not create:" + host_ + uri_ + "/inventory/" + name, 
+							Toast.makeText(getApplicationContext(), "Could not create:" + METER_REG_URL + "/" + name, 
 									Toast.LENGTH_LONG).show();
 							throw e;
 						}
