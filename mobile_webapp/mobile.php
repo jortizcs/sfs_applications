@@ -12,7 +12,18 @@ $sfsconn = new SFSConnection();
 $sfsconn->setStreamFSInfo($HOST, $PORT);
 $qrc_exist = $sfsconn->exists("/buildings/SDH/qrc/".$qrc);
 if(!$qrc_exist){
-	echo "QR Code in unknown!";
+	echo (htmlentities(html_entity_decode('<p style="
+    max-width: 50%;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid red;
+    background: #C54646;
+    color: #FFFFFF;
+    padding: 20px;
+    font-family: &quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, &quot;Lucida Sans&quot;, Geneva, Verdana, sans-serif;
+    box-shadow: 0 0 5px #888;
+    ">QR Code is unknown!</p>')));
 }
 else{
 	$children = $sfsconn->getChildren("/buildings/SDH/qrc/".$qrc);
@@ -40,16 +51,40 @@ else{
 				header( 'Location: '.$url );
 			}else{
 				#echo "no property 'bindattach_ts'\n";
-                echo "No meter attached to item.  Cannot fetch trace.\n";
+                #echo "No meter attached to item.  Cannot fetch trace.\n";
+                echo (htmlentities(html_entity_decode('<p style="
+    max-width: 50%;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid red;
+    background: #C54646;
+    color: #FFFFFF;
+    padding: 20px;
+    font-family: &quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, &quot;Lucida Sans&quot;, Geneva, Verdana, sans-serif;
+    box-shadow: 0 0 5px #888;
+">No meter attached to item. Cannot fetch trace!</p>')));
 			}
 		}
 		else {
 			#echo "no children under "."/buildings/SDH/qrc/".$qrc."/".$item;
-            echo "QR Code attachment has not been registered!";
+            #echo "QR Code attachment has not been registered!";
+            echo (htmlentities(html_entity_decode('<p style="
+    max-width: 50%;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid red;
+    background: #C54646;
+    color: #FFFFFF;
+    padding: 20px;
+    font-family: &quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, &quot;Lucida Sans&quot;, Geneva, Verdana, sans-serif;
+    box-shadow: 0 0 5px #888;
+    ">QR Code attachment has not been registered!</p>')));
 		}
 	} else {
 		#echo "qrc is not in /buildings/SDH/qrc/";
-        echo "QR Code is unknown!";
+        echo htmlentities(html_entity_decode('<p style=  max-width: 50%; text-align: center; display: block; margin: 0 auto; border: 1px solid red; background: #C54646  color: #FFFFFF; padding: 20px; font-family: &quot;Lucida Grande&quot;, &quot;Lucida Sans Unicode&quot;, &quot;Lucida Sans&quot;, Geneva, Verdana, sans-serif; box-shadow: 0 0 5px #888;">QR Code is unknown!</p>'));
 	}
 }
 ?>
