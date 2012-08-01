@@ -1,5 +1,8 @@
 package mobile.SFS;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,14 +33,19 @@ public class ViewServices extends Activity {
 			Log.i("WebViewIntent", "url=" + url);
 			
 			String urlstr = getIntent().getStringExtra("url");
-	/*JSONArray arr = new JSONObject(CurlOps.get(urlstr)).getJSONArray("children");
 			
-			if(arr != null && arr.length() == 1) {
-				arr = new JSONObject(CurlOps.get(arr.getJSONObject(0).toString())).getJSONArray("children");
+			try {
+				JSONArray arr = new JSONObject(CurlOps.get(urlstr)).getJSONArray("children");
+				
 				if(arr != null && arr.length() == 1) {
-					urlstr = arr.getJSONObject(0)
+					arr = new JSONObject(CurlOps.get(arr.getJSONObject(0).toString())).getJSONArray("children");
+					if(arr != null && arr.length() == 1) { //incorrect but a simple hack for now, items can have multiple children (attachments)
+						urlstr = GRAPH_HOME + arr.getString(0).split("->")[1] + "/true_power";
+						System.out.println(urlstr);
+					}
 				}
-			}*/
+			}
+			catch(Exception e) {}
 			
 	        Uri uri = Uri.parse(urlstr);
 	        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
