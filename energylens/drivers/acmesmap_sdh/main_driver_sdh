@@ -10,5 +10,5 @@ exec 2>&1 nohup node main.js >/mnt/main_sfs_sdh.out & \
 stop)  
 kill `cat /tmp/main_driver_sdh.pid` ;;
 *)  
-echo "usage: main_driver {start|stop}" ;;
+echo "usage: main_driver_sdh {start|stop}" ;;
 esac
