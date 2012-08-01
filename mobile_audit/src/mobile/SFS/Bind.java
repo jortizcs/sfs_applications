@@ -48,8 +48,8 @@ public class Bind extends Activity {
         bind.setOnClickListener(new OnClickListener() {
         	public void onClick(View v) {
         		try {
-        			if(!Util.getProperties(host_ + itemUri).getString("Type").equals("Item") || 
-        					!Util.getProperties(host_ + meterUri).getString("Type").equals("Meter")) {
+        			if(!Util.getProperties(host_ + itemUri).getString("Type").equals("Item") ||
+        					Util.getProperties(host_ + meterUri).has("Type")) {
         				Toast.makeText(Bind.this, "Invalid binding. Scan first an item then a meter.", Toast.LENGTH_LONG).show();
         				Intent next = new Intent(Bind.this, MobileSFS.class);
         				next.putExtra("curr_loc", currLocString);
@@ -64,7 +64,7 @@ public class Bind extends Activity {
         				for(int i = 0; i < jarr.length(); i++) { //check for already bound
         					s = jarr.getString(i).split("->");
         					        					
-        					if(Util.getProperties(host_ + itemUri + "/" + s[0].trim()).get("Type").equals("Meter")) {
+        					if(!Util.getProperties(host_ + itemUri + "/" + s[0].trim()).has("Type")) {
         						Toast.makeText(Bind.this, "Already bound to: " +
                						 s[0].trim() + "\nPlease unbind first.", Toast.LENGTH_SHORT).show();
         						Intent next = new Intent(Bind.this, Unbind.class);

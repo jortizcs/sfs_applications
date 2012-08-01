@@ -31,18 +31,18 @@ public class Util {
 		return huc.getResponseCode();
 	}
 	
-	/*public static boolean isExistingResource(String url) {
+	public static boolean isExistingResource(String url) {
 		try {
 			return getResponseCode(url) != 404;
 		}
 		catch(IOException e) {
 			return false;
 		}
-	}*/
-	
-	public static boolean isExistingResource(String url) {
-		return SfsCache.getInstance().getEntry(url.replaceFirst(GlobalConstants.HOST, "")) != null;
 	}
+	
+	/*public static boolean isExistingResource(String url) {
+		return SfsCache.getInstance().getEntry(url.replaceFirst(GlobalConstants.HOST, "")) != null;
+	}*/
 	
 	public static String createResource(String name, String type, String targetUrl) throws Exception, JSONException {
 		JSONObject jsonObj = new JSONObject();

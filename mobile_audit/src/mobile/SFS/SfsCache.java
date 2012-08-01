@@ -88,6 +88,12 @@ public class SfsCache implements Cache {
 		catch(Exception e) {
 			e.printStackTrace();
 		}
+		//printCache();
+	}
+	
+	public void printCache() {
+		for(String s : map_.keySet())
+			System.out.println(s);
 	}
 
 	public void removeEntry(String path) {

@@ -10,7 +10,7 @@ import java.net.URLConnection;
 import org.json.JSONObject;
 
 public class CurlOps {
-	/*public static String get(String urlString) throws Exception {
+	public static String get(String urlString) throws Exception {
 		String total = new String("");
 		// Create a URL for the desired page
 		URL url = new URL(urlString);
@@ -26,11 +26,11 @@ public class CurlOps {
 		in.close();
 		return total;
 
-	}*/
-	
-	public static String get(String urlString) throws Exception {
-		return TXM.getTXM().performOp("GET", urlString, null);
 	}
+	
+	/*public static String get(String urlString) throws Exception {
+		return TXM.getTXM().performOp("GET", urlString, null);
+	}*/
 	
 	public static String post(String data, String urlString) throws Exception {
 		String total = new String("");
@@ -65,7 +65,7 @@ public class CurlOps {
 		return TXM.getTXM().performOp("POST", urlString, new JSONObject(data));
 	}*/
 	
-	/*public static String put(String data, String urlString) throws Exception {
+	public static String put(String data, String urlString) throws Exception {
 		URL url = new URL(urlString);
 		HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
 		httpCon.setDoOutput(true);
@@ -74,11 +74,11 @@ public class CurlOps {
 		out.write(data);
 		out.close();
 		return httpCon.getResponseMessage();
-	}*/
-	
-	public static String put(String data, String urlString) throws Exception {
-		return TXM.getTXM().performOp("PUT", urlString, new JSONObject(data));
 	}
+	
+	/*public static String put(String data, String urlString) throws Exception {
+		return TXM.getTXM().performOp("PUT", urlString, new JSONObject(data));
+	}*/
 	
 	public static String delete(String urlString) throws Exception {
 		URL url = new URL(urlString);

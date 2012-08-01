@@ -1,3 +1,4 @@
-check process acmedriver pidfile /tmp/main_driver.pid
-  start program = "/home/ubuntu/sfs_applications/energylens/drivers/acmesmap/main_driver start'"
-  stop program = "/home/ubuntu/sfs_applications/energylens/drivers/acmesmap/main_driver stop'"
+check process acmedriver_sdh pidfile /tmp/main_driver_sdh.pid
+  start program = "/bin/bash -c '/home/ubuntu/sfs_applications/energylens/drivers/acmesmap/main_driver_sdh start'"
+  stop program = "/bin/bash -c '/home/ubuntu/sfs_applications/energylens/drivers/acmesmap/main_driver_sdh stop'"
+if failed host 10.171.47.100 port 1340 protocol http with timeout 10 seconds for 1 cycle then restart

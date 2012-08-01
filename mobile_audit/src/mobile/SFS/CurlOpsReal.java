@@ -1,6 +1,7 @@
 package mobile.SFS;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -63,7 +64,12 @@ public class CurlOpsReal {
 		OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
 		out.write(data);
 		out.close();
-		return httpCon.getResponseMessage();
+		try {
+			return httpCon.getResponseMessage();
+		}
+		catch(EOFException e) {
+			return "";
+		}
 	}
 	
 	public static String delete(String urlString) throws Exception {

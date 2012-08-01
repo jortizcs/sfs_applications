@@ -24,7 +24,7 @@ function sendit(infokey, smapdatapt){
     var req = http.request(options, function(res) {});
     req.on('error', function(e){
                         console.log('problem with request: ' + e.message);
-                        process.exit(1);             
+                        //process.exit(1);             
                     });
     //smap reading: [[-10000, 155331, 4221], [0, 155387, 4221]]
     //timestamp, value, seqno, we only want the value

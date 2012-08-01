@@ -179,7 +179,7 @@ public class AddResource extends Activity {
 	//				properties.put("Type", resType_.getSelectedItem().toString());
 	//				properties.put("Type", name.startsWith("ACM") ? "Meter" : "Item");
 					
-					CheckBox isMeterCB = (CheckBox) findViewById(R.id.is_meter);
+					/*CheckBox isMeterCB = (CheckBox) findViewById(R.id.is_meter);
 					if(name.startsWith("ACM") || isMeterCB.isChecked()) {
 						properties.put("Type", "Meter");
 						try {
@@ -194,7 +194,7 @@ public class AddResource extends Activity {
 								throw e;
 							}
 						}
-					} else {
+					} else {*/
 						properties.put("Type", "Item");
 						try {
 							Util.createResource(nname, "default", host_ + uri_ + "/inventory");
@@ -208,7 +208,7 @@ public class AddResource extends Activity {
 								throw e;
 							}
 						}
-					}
+					//}
 					
 					try {
 						Util.createSymlink(GlobalConstants.TAXHOME + "/" + getTax(ResType.valueOf(name)),

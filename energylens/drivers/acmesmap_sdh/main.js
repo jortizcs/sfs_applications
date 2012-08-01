@@ -1,5 +1,6 @@
 var backgrounder = require('backgrounder');
 var http = require('http');
+var fs = require('fs');
 
 var workers = new Array();
 var total_data="";
@@ -15,11 +16,13 @@ var acmesinfo_star = null;
 function check_connection(){
     http.get(sfshost, function(res){
             if(res.statusCode != 404){
-               process.kill(1);
+               //process.kill(1);
+                console.log("streamfs server is not up\n");
             }
         }).on('error', 
             function(e){
-                process.kill(1);
+                //process.kill(1);
+                console.log("streamfs server is not up\n");
             });
 }
 
@@ -86,7 +89,7 @@ function handle(req, resp){
             }
         } catch(e){
             console.log(e);
-            process.exit(1);
+            //process.exit(1);
         }
         resp.writeHead(200, {'Content-Type': 'text/json'});
         resp.end("{\"status\":\"success\"}");
@@ -120,30 +123,99 @@ console.log("starting server " + host + ":1340");
 
 setInterval(check_connection, 1000*75);*/
 
+var server=null;
+var timechunks="";
+var servertime = -1;
 var respStr = "";
 var driver_worker = backgrounder.spawn(__dirname + "/driver.js");
 var terminated = false;
-console.log("FETCHING: http://" + host + ":" + port + rtpath + "/*");
-http.get("http://" + host + ":" + port + rtpath + "/*", 
-    function(res){
-        res.on('data', function(chunk){
-                respStr += chunk;
-                if(!terminated){
-                    driver_worker.terminate();
-                    terminated = true;
-                }
+
+function initwload(){
+    console.log("FETCHING: http://" + host + ":" + port + rtpath + "/*");
+    http.get("http://" + host + ":" + port + rtpath + "/*", 
+        function(res){
+            res.on('data', function(chunk){
+                    respStr += chunk;
+                    if(!terminated){
+                        driver_worker.terminate();
+                        terminated = true;
+                    }
+                });
+            res.on('end', function(){
+                acmesinfo_star = JSON.parse(respStr);
+                writeit(acmesinfo_star);
+                startserver(); 
             });
-        res.on('end', function(){
-            acmesinfo_star = JSON.parse(respStr);
-            var server = http.createServer(handle);
-            server.listen(1340, host);
-            console.log("starting server " + host + ":1340");
-            setInterval(check_connection, 1000*75);            
-        });
-    }).on('error', 
-        function(e){
-            console.log(e);
-            process.exit(1);
-        });
+        }).on('error', 
+            function(e){
+                console.log(e);
+                //process.exit(1);
+            });
+}
+
+function writeit(devinfo_){
+    var data = {"ts":servertime, "devinfo":devinfo_};
+    fs.writeFileSync("./devs.json", JSON.stringify(data), 'utf8');
+}
+
+function initwoload(){
+    if(!terminated){
+        driver_worker.terminate();
+        terminated = true;
+        console.log("Terminated driver.js\n");
+    }
+    console.log("LOADING devinfo from file\n");
+    var devinfo_ = fs.readFileSync("./devs.json", 'utf8');
+    var devinfoObj = JSON.parse(devinfo_);
+    acmesinfo_star = devinfoObj.devinfo;
+    startserver();
+    
+}
+
+function startserver(){
+    server = http.createServer(handle);
+    server.listen(1340, host);
+    console.log("starting server " + host + ":1340");
+    setInterval(check_connection, 1000*75)
+}
+
+function settime(){
+    http.get("http://" + host + ":" + port + "/time",
+        function(res){
+            res.on('data', function(chunk){
+                timechunks += chunk;
+            });
+
+            res.on('end', function(){
+                console.log("time=" + timechunks);
+                servertime = JSON.parse(timechunks).Now;
+            }); 
+        }    
+    );
+}
+
+if(fs.existsSync("./devs.json")){
+    var devinfo = JSON.parse(fs.readFileSync("./devs.json", 'utf8'));
+    http.get("http://" + host + ":" + port + "/time",
+        function(res){
+            res.on('data', function(chunk){
+                timechunks += chunk;
+            });
+
+            res.on('end', function(){
+                console.log("time=" + timechunks);
+                servertime = JSON.parse(timechunks).Now;
+                if(servertime-devinfo.ts>604800/*3600*/){
+                    initwload();
+                } else {
+                    initwoload();
+                }
+            }); 
+        }    
+    );
+} else {
+    settime();
+    initwload();
+}
 
 

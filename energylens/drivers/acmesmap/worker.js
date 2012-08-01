@@ -9,6 +9,7 @@ var rtpath = "/jorge";
 var iteration = 0;
 
 var acmesinfo=new Object();
+var acmesinfo_star = null;
 var smapreport = null;
 
 function sendit(infokey, smapdatapt){
@@ -20,10 +21,17 @@ function sendit(infokey, smapdatapt){
                     "path":mpath,
                     "method":'POST'
                     };
-    var req = http.request(options, function(res) {});
+    var req = http.request(options, function(res) {
+                    if(res.statusCode!=200){
+                        console.log("POST http://" + options.host + ":" + options.port + options.path + 
+                            "\tdata=" + JSON.stringify(data));
+                    } else {
+                        console.log("NON 200 status Code: " + res.statusCode);
+                    }
+                });
     req.on('error', function(e){
                         console.log('problem with request: ' + e.message);
-                        process.exit(1);             
+                        //process.exit(1);
                     });
     //smap reading: [[-10000, 155331, 4221], [0, 155387, 4221]]
     //timestamp, value, seqno, we only want the value
@@ -31,8 +39,7 @@ function sendit(infokey, smapdatapt){
     req.write(JSON.stringify(data) + '\n');
     req.end();
 
-    console.log("POST http://" + options.host + ":" + options.port + options.path + 
-                "\tdata=" + JSON.stringify(data));
+    
 }
 
 function sfs_fileexists(path, callback){
@@ -266,8 +273,23 @@ function forwardit(callback){
         console.log("acmeid=" + acmeid + ", stream_name=" + streamname);
 
         var infokey = acmeid + "/" + streamname;
-        console.log("acmesinfo[" + infokey+"]=" + typeof acmesinfo[infokey]);
+        var infokey2 = rtpath + "/acme" + infokey;
+        var infokey3 = infokey2 + "/";
+
+        //lookup the pubid from the star lookup
+        if(typeof acmesinfo[infokey] == "undefined" && 
+            (typeof acmesinfo_star[infokey2] != "undefined" ||
+            typeof acmesinfo_star[infokey3] != "undefined")){
+            if(typeof acmesinfo_star[infokey3] != "undefined"){
+                acmesinfo[infokey] = acmesinfo_star[infokey3].pubid;
+            } else {
+                acmesinfo[infokey] = acmesinfo_star[infokey2].pubid;
+            }
+        }
+
+
         if(typeof acmesinfo[infokey] == "undefined"){
+            
             var acmepath = rtpath + "/acme" + acmeid;
             var acmestreampath = rtpath + "/acme" + infokey;
 
@@ -291,6 +313,8 @@ function forwardit(callback){
                     }
                 });
         } else {
+
+            console.log("acmesinfo[" + infokey+"]=" + acmesinfo[infokey]);
             sendit(infokey, smapreport[keys[i]]);
             iteration +=1;
             forwardit(function(m){});
@@ -305,6 +329,7 @@ process.on('message',
         if(message.op == "start"){
             started = true;
             acmesinfo = message.acmesinfo;
+            acmesinfo_star = message.acmesinfo_star;
             smapreport = message.smapreport;
             forwardit(function(status_){
                     console.log("forwardit.status=" + JSON.stringify(status_));

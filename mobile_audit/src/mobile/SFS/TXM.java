@@ -80,7 +80,8 @@ public class TXM {
 			out.write(json.toString().getBytes());
 			out.close();
 		}
-		return cache.performOp(op, path, data).toString();
+		JSONObject json = cache.performOp(op, path, data);
+		return json == null ? "" : json.toString();
 	}
 	
 	/**

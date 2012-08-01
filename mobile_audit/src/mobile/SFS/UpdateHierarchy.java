@@ -45,7 +45,7 @@ public class UpdateHierarchy extends Activity {
 		ListView listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(new ArrayAdapter<String>(this, R.layout.listitem,
         		new String[] {
-        			"Add Space", "Add Resource", "Bind Meter to Item", "Unbind Meter from Item",
+        			"Add Space", "Add Resource", "Add Meter", "Bind Meter to Item", "Unbind Meter from Item",
         			"Attach Resources", "Detach Resources", "Delete"
         		}));
         
@@ -68,11 +68,17 @@ public class UpdateHierarchy extends Activity {
 						startActivity(intent);
 						return;
 					}
-					case 2: finalIntent_ = new Intent(UpdateHierarchy.this, Bind.class); break;
-					case 3:	finalIntent_ = new Intent(UpdateHierarchy.this, Unbind.class); break;
-					case 4: finalIntent_ = new Intent(UpdateHierarchy.this, Attach.class); break;
-					case 5: finalIntent_ = new Intent(UpdateHierarchy.this, Detach.class); break;
-					case 6: {
+					case 2: {
+						intent = new Intent(UpdateHierarchy.this, AddMeter.class);
+						intent.putExtra("curr_loc", currLocString_);
+						startActivity(intent);
+						return;
+					}
+					case 3: finalIntent_ = new Intent(UpdateHierarchy.this, Bind.class); break;
+					case 4:	finalIntent_ = new Intent(UpdateHierarchy.this, Unbind.class); break;
+					case 5: finalIntent_ = new Intent(UpdateHierarchy.this, Attach.class); break;
+					case 6: finalIntent_ = new Intent(UpdateHierarchy.this, Detach.class); break;
+					case 7: {
 						finalIntent_ = new Intent(UpdateHierarchy.this, Delete.class);
 						intent = new Intent("com.google.zxing.client.android.SCAN");
 						intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
@@ -82,6 +88,7 @@ public class UpdateHierarchy extends Activity {
 					}
 				}
 				
+				System.out.println("finalIntent: " + finalIntent_);
 				intent = new Intent("com.google.zxing.client.android.SCAN");
 				intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
 				intent.putExtra("arg", (arg2 < 4 ? "Meter" : "Node"));
