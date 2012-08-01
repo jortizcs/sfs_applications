@@ -1,0 +1,14 @@
+#!/bin/bash
+export DISPLAY=localhost:0.0
+case $1 in
+start)  
+pid=$(($$ + 1))
+echo $pid > /tmp/main_driver_sdh.pid;
+exec 2>&1 nohup node main.js >/mnt/main_sfs_sdh.out & \
+1>/tmp/main_driver_sdh.out 
+;;
+stop)  
+kill `cat /tmp/main_driver_sdh.pid` ;;
+*)  
+echo "usage: main_driver {start|stop}" ;;
+esac

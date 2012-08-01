@@ -1,0 +1,4 @@
+Translates from incoming smap data to streamfs for "fitpc_acmes"
+
+driver.js  run this if you just want to see the messages from the deployment
+main.js spawns workers to create the necessary files in streamfs and psts the data there.
