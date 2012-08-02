@@ -26,7 +26,7 @@ public class AddMeter extends Activity {
 	private String qrc_;
 	
 	//public static final String METER_HOST = "http://ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080";
-	public static final String METER_REG_URL = "/jorge";
+	public static final String METER_REG_URL = "/dev";
 	
 	public void onCreate(Bundle savedInstanceState) {
 		
