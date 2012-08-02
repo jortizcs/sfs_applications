@@ -21,16 +21,16 @@ import android.widget.Toast;
 import android.widget.CheckBox;
 
 public class AddResource extends Activity {
-	private String host_ = GlobalConstants.HOST;
-	private String uri_ = GlobalConstants.HOMEPATH;
+	private static String host_ = GlobalConstants.HOST;
+	private static String uri_ = GlobalConstants.HOMEPATH;
 	//private String host_ = "http://is4server.com:8083";
 	//private String uri_ = "/buildings/SDH";
 	//private String host_ = "http://is4server.com:8084";
 	//private String uri_ = "/buildings/home";
-	private String qrc_;
-	private TextView currLoc_;
-	private EditText powerRating_, currentDraw_;
-	private AutoCompleteTextView resName_;
+	private static String qrc_;
+	private static TextView currLoc_;
+	private static EditText powerRating_, currentDraw_;
+	private static AutoCompleteTextView resName_;
 //	private Spinner resType_;
 	
 	public static String getTax(ResType resType) {
