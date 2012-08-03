@@ -46,7 +46,7 @@ public class Unbind extends Activity {
         	public void onClick(View v) {
         		try {
         			if(!Util.getProperties(host_ + itemUri).getString("Type").equals("Item") || 
-        					!Util.getProperties(host_ + meterUri).getString("Type").equals("Meter")) {
+        					!meterUri.startsWith("/dev/")) {
         				Toast.makeText(Unbind.this, "Invalid unbind. Scan first an item then a meter.", Toast.LENGTH_LONG).show();
         				Intent next = new Intent(Unbind.this, MobileSFS.class);
         				next.putExtra("curr_loc", currLocString);
