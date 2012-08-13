@@ -2,8 +2,11 @@ var backgrounder = require('backgrounder');
 var http = require('http');
 var total_data = "";
 
-var sfshost = "http://ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080";
-var host = "ec2-184-169-204-224.us-west-1.compute.amazonaws.com";
+//var sfshost = "http://ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080";
+//var host = "ec2-184-169-204-224.us-west-1.compute.amazonaws.com";
+//var port = 8080;
+var sfshost = "http://energylens.sfsdev.is4server.com:8081";
+var host = "energylens.sfsdev.is4server.com";
 var port = 8080;
 var rtpath = "/jorge";
 var iteration = 0;
@@ -12,6 +15,7 @@ var acmesinfo=new Object();
 var acmesinfo_star = null;
 var smapreport = null;
 
+var HTTP_REQUEST_TIMEOUT = 1000;
 function sendit(infokey, smapdatapt){
     //var infokey = acmeid + "/" + acmestreamname;
     var mpath = rtpath + "/acme" + infokey + "?type=generic&pubid="+ acmesinfo[infokey];
@@ -23,12 +27,16 @@ function sendit(infokey, smapdatapt){
                     };
     var req = http.request(options, function(res) {
                     if(res.statusCode!=200){
+                        console.log("NON 200 status Code: " + res.statusCode);
+                    } else {
                         console.log("POST http://" + options.host + ":" + options.port + options.path + 
                             "\tdata=" + JSON.stringify(data));
-                    } else {
-                        console.log("NON 200 status Code: " + res.statusCode);
                     }
+                    iteration +=1;
+                    forwardit(function(m){});
                 });
+    req.headers['connection']='close';
+    req.setTimeout(HTTP_REQUEST_TIMEOUT);
     req.on('error', function(e){
                         console.log('problem with request: ' + e.message);
                         //process.exit(1);
@@ -38,8 +46,6 @@ function sendit(infokey, smapdatapt){
     var data = {"value":smapdatapt.Readings[0][1]};
     req.write(JSON.stringify(data) + '\n');
     req.end();
-
-    
 }
 
 function sfs_fileexists(path, callback){
@@ -204,8 +210,8 @@ function seq_nostream(infokey, acmepath, acmestreampath, data, callback){
                         if(pubid!=null){
                             acmesinfo[infokey]=pubid;
                             sendit(infokey, data);
-                            iteration +=1;
-                            forwardit(function(m){});
+                            //iteration +=1;
+                            //forwardit(function(m){});
                             
                             console.log("acmesinfo[" + infokey + "]=" + pubid);
                             callback({"status":"forwarded"});
@@ -235,8 +241,8 @@ function seq_filenostream(infokey, acmepath, acmestreampath, data, callback){
                     function(pubid){
                         if(pubid!=null){
                             acmesinfo[infokey]=pubid;
-                            sendit(infokey, data);
-                            iteration +=1;
+                            //sendit(infokey, data);
+                            //iteration +=1;
                             forwardit(function(m){});
                             
                             /*if(acmestreampath.indexOf("energy")>0){
@@ -316,8 +322,8 @@ function forwardit(callback){
 
             console.log("acmesinfo[" + infokey+"]=" + acmesinfo[infokey]);
             sendit(infokey, smapreport[keys[i]]);
-            iteration +=1;
-            forwardit(function(m){});
+            //iteration +=1;
+            //forwardit(function(m){});
         }
     } else {
         callback({"status":"done"});

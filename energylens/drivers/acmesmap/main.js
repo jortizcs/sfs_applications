@@ -5,8 +5,10 @@ var fs = require('fs');
 var workers = new Array();
 var total_data="";
 
-var host = "ec2-184-169-204-224.us-west-1.compute.amazonaws.com";
-var port = 8080;
+//var host = "ec2-184-169-204-224.us-west-1.compute.amazonaws.com";
+//var port = 8080;
+var host="energylens.sfsdev.is4server.com";
+var port = 8080
 var rtpath = "/jorge";
 var sfshost = "http://" + host + ":" + port;
 
@@ -106,7 +108,7 @@ var server=null;
 var timechunks="";
 var servertime = -1;
 var respStr = "";
-var driver_worker = backgrounder.spawn(__dirname + "/driver.js");
+var driver_worker = backgrounder.spawn(__dirname + "/driver_home.js");
 var terminated = false;
 
 function initwload(){
@@ -155,7 +157,7 @@ function startserver(){
     server = http.createServer(handle);
     server.listen(1339, host);
     console.log("starting server " + host + ":1339");
-    setInterval(check_connection, 1000*75)
+    //setInterval(check_connection, 1000*75)
 }
 
 function settime(){

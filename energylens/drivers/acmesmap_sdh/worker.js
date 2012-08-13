@@ -12,6 +12,8 @@ var acmesinfo=new Object();
 var acmesinfo_star = null;
 var smapreport = null;
 
+var HTTP_REQUEST_TIMEOUT = 100;
+
 function sendit(infokey, smapdatapt){
     //var infokey = acmeid + "/" + acmestreamname;
     var mpath = rtpath + "/acme" + infokey + "?type=generic&pubid="+ acmesinfo[infokey];
@@ -19,21 +21,29 @@ function sendit(infokey, smapdatapt){
                     "host":host,
                     "port":port,
                     "path":mpath,
-                    "method":'POST'
+                    "method":'POST',
+                    "headers":{'Connection':'close'}
                     };
-    var req = http.request(options, function(res) {});
+    var req = http.request(options, function(res) {
+                if(res.statusCode!=200){
+                    console.log("NON 200 status Code: " + res.statusCode);
+                } else {
+                    console.log("POST http://" + options.host + ":" + options.port + 
+                        options.path + "\tdata=" + JSON.stringify(data));
+                }
+                iteration +=1;
+                forwardit(function(m){});
+            });
+    req.setTimeout(HTTP_REQUEST_TIMEOUT);
     req.on('error', function(e){
                         console.log('problem with request: ' + e.message);
-                        //process.exit(1);             
+                        //process.exit(1);           
                     });
     //smap reading: [[-10000, 155331, 4221], [0, 155387, 4221]]
     //timestamp, value, seqno, we only want the value
     var data = {"value":smapdatapt.Readings[0][1]};
     req.write(JSON.stringify(data) + '\n');
     req.end();
-
-    console.log("POST http://" + options.host + ":" + options.port + options.path + 
-                "\tdata=" + JSON.stringify(data));
 }
 
 function sfs_fileexists(path, callback){
@@ -198,8 +208,8 @@ function seq_nostream(infokey, acmepath, acmestreampath, data, callback){
                         if(pubid!=null){
                             acmesinfo[infokey]=pubid;
                             sendit(infokey, data);
-                            iteration +=1;
-                            forwardit(function(m){});
+                            //iteration +=1;
+                            //forwardit(function(m){});
                             
                             console.log("acmesinfo[" + infokey + "]=" + pubid);
                             callback({"status":"forwarded"});
@@ -230,8 +240,8 @@ function seq_filenostream(infokey, acmepath, acmestreampath, data, callback){
                         if(pubid!=null){
                             acmesinfo[infokey]=pubid;
                             sendit(infokey, data);
-                            iteration +=1;
-                            forwardit(function(m){});
+                            //iteration +=1;
+                            //forwardit(function(m){});
                             
                             /*if(acmestreampath.indexOf("energy")>0){
                                 sfs_setprops(acmestreampath,{"units":"mWh"});
@@ -269,7 +279,6 @@ function forwardit(callback){
         var infokey = acmeid + "/" + streamname;
         var infokey2 = rtpath + "/acme" + infokey;
         var infokey3 = infokey2 + "/";
-        console.log("acmesinfo[" + infokey+"]=" + typeof acmesinfo[infokey]);
 
         //lookup the pubid from the star lookup
         if(typeof acmesinfo[infokey] == "undefined" && 
@@ -306,9 +315,10 @@ function forwardit(callback){
                     }
                 });
         } else {
+            console.log("acmesinfo[" + infokey+"]=" + acmesinfo[infokey]);
             sendit(infokey, smapreport[keys[i]]);
-            iteration +=1;
-            forwardit(function(m){});
+            //iteration +=1;
+            //forwardit(function(m){});
         }
     } else {
         callback({"status":"done"});

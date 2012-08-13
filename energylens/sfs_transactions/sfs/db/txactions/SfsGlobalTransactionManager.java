@@ -59,8 +59,10 @@ public class SfsGlobalTransactionManager implements Container{
 
     public static void main(String[] args){
         try {
+            /*SfsGlobalTransactionManager server = new SfsGlobalTransactionManager(
+                                    "ec2-184-169-204-224.us-west-1.compute.amazonaws.com", 8080, "http");*/
             SfsGlobalTransactionManager server = new SfsGlobalTransactionManager(
-                                    "ec2-184-169-204-224.us-west-1.compute.amazonaws.com", 8080, "http");
+                                    "energylens.sfsprod.is4server.com", 8080, "http");
             //http
             Connection connection = new SocketConnection((Container)server);
             SocketAddress address = new InetSocketAddress(4896);

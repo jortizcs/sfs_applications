@@ -2,7 +2,6 @@ var backgrounder = require('backgrounder');
 var http = require('http');
 var fs = require('fs');
 
-var workers = new Array();
 var total_data="";
 
 var host = "ec2-184-169-204-224.us-west-1.compute.amazonaws.com";
@@ -12,6 +11,8 @@ var sfshost = "http://" + host + ":" + port;
 
 var acmesinfo = new Object();
 var acmesinfo_star = null;
+
+var worker_stack = new Array();
 
 function check_connection(){
     http.get(sfshost, function(res){
@@ -67,6 +68,7 @@ function handle(req, resp){
                             var smapreport = requestObj;
                             console.log(JSON.stringify(requestObj) + "\n");
                             var worker = backgrounder.spawn(__dirname + "/worker.js");
+                            worker_stack.push(worker);
                             worker.send({"op":"start","smapreport":requestObj, 
                                         "acmesinfo":acmesinfo,
                                         "acmesinfo_star":acmesinfo_star});
@@ -76,20 +78,17 @@ function handle(req, resp){
                                     console.log("terminating worker");
                                     worker.terminate();
                                 });
+                            setTimeout(terminateNextWorker, 2000);
                             resp.writeHead(200, {'Content-Type': 'text/json'});
                             resp.end("{\"status\":\"success\"}");
                             return;
                         }
                     }
                     console.log("not ok");
-                    /*resp.writeHead(200, {'Content-Type': 'text/json'});
-                    resp.end(JSON.stringify(
-                        {"msg":"huh? i have no idea what you want me to do."}));*/
                 }
             }
         } catch(e){
             console.log(e);
-            //process.exit(1);
         }
         resp.writeHead(200, {'Content-Type': 'text/json'});
         resp.end("{\"status\":\"success\"}");
@@ -127,7 +126,7 @@ var server=null;
 var timechunks="";
 var servertime = -1;
 var respStr = "";
-var driver_worker = backgrounder.spawn(__dirname + "/driver.js");
+var driver_worker = backgrounder.spawn(__dirname + "/driver_sdh.js");
 var terminated = false;
 
 function initwload(){
@@ -176,7 +175,7 @@ function startserver(){
     server = http.createServer(handle);
     server.listen(1340, host);
     console.log("starting server " + host + ":1340");
-    setInterval(check_connection, 1000*75)
+    //setInterval(check_connection, 1000*75)
 }
 
 function settime(){
@@ -216,6 +215,13 @@ if(fs.existsSync("./devs.json")){
 } else {
     settime();
     initwload();
+}
+
+function terminateNextWorker(){
+    if(worker_stack.length>0){
+        worker_stack.shift().terminate();
+        console.log("Terminated worker thread; num_workers=" + worker_stack.length);
+    }
 }
 
 
