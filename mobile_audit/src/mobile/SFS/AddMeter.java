@@ -19,14 +19,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class AddMeter extends Activity {
-	private String host_ = GlobalConstants.HOST;
-	private String uri_ = GlobalConstants.HOMEPATH;
-	private TextView currLoc_;
-	private AutoCompleteTextView meterId_;
-	private String qrc_;
+	private static String host_ = GlobalConstants.HOST;
+	private static String uri_ = GlobalConstants.HOMEPATH;
+	private static TextView currLoc_;
+	private static AutoCompleteTextView meterId_;
+	private static String qrc_;
 	
 	//public static final String METER_HOST = "http://ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080";
-	public static final String METER_REG_URL = "/jorge";
+	public static final String METER_REG_URL = "/dev";
 	
 	public void onCreate(Bundle savedInstanceState) {
 		

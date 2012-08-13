@@ -21,7 +21,7 @@ public class TXM {
 	
 	private static TXM txm;
 	
-	private long localInitTime_, serverInitTime_;
+	public static long localInitTime_, serverInitTime_;
 	private boolean connected_ = true;
 	private Context context_;
 	

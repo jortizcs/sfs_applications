@@ -1,6 +1,8 @@
 package mobile.SFS;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -93,12 +95,25 @@ public class Bind extends Activity {
 						if(itemLoc.equals(meterLoc)){
 							res = Util.createSymlink(itemUri, meterUri, host_);
 							Log.i("Bind", "creating symlink from qrc; " + itemUri + " to " + meterUri);
+							JSONObject properties = new JSONObject();
+							properties.put("bindattach_ts", TXM.serverInitTime_ - TXM.localInitTime_ + System.currentTimeMillis());
+							JSONObject jsonObj = new JSONObject();
+							jsonObj.put("operation", "update_properties");
+							jsonObj.put("properties", properties);
+							try {
+								CurlOps.post(jsonObj.toString(), host_ + itemUri);
+								Log.i("Bind", "json: " + jsonObj.toString() + "; itemUri: " + host_ + itemUri);
+							} catch(Exception e){
+								e.printStackTrace();
+							}
+							
 						} else {
 							Toast.makeText(Bind.this, 
         							"Cannot attach items registered in different locations!", 
         							Toast.LENGTH_LONG).show();
 						}
 					} catch(Exception e){
+						e.printStackTrace();
 						String itemuri=itemUri;
 						if(itemUri.endsWith("/"))
 							itemuri =itemUri.substring(0, itemUri.length()-1);

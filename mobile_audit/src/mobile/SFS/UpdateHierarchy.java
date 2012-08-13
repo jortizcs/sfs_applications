@@ -18,8 +18,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.util.Log;
 
 public class UpdateHierarchy extends Activity {
-	private String root_, currLocString_;
-	private Intent finalIntent_;
+	private static String root_, currLocString_;
+	private static Intent finalIntent_;
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

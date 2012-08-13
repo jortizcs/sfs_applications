@@ -21,16 +21,16 @@ import android.widget.Toast;
 import android.widget.CheckBox;
 
 public class AddResource extends Activity {
-	private String host_ = GlobalConstants.HOST;
-	private String uri_ = GlobalConstants.HOMEPATH;
+	private static String host_ = GlobalConstants.HOST;
+	private static String uri_ = GlobalConstants.HOMEPATH;
 	//private String host_ = "http://is4server.com:8083";
 	//private String uri_ = "/buildings/SDH";
 	//private String host_ = "http://is4server.com:8084";
 	//private String uri_ = "/buildings/home";
-	private String qrc_;
-	private TextView currLoc_;
-	private EditText powerRating_, currentDraw_;
-	private AutoCompleteTextView resName_;
+	private static String qrc_;
+	private static TextView currLoc_;
+	private static EditText powerRating_, currentDraw_;
+	private static AutoCompleteTextView resName_;
 //	private Spinner resType_;
 	
 	public static String getTax(ResType resType) {
@@ -38,22 +38,22 @@ public class AddResource extends Activity {
 			case ACM: return "Electronics/Other";
 			case BAT: return "Electronics/Other";
 			case COF: return "Miscellaneous/Electric_Housewares";
-			case CPU: return "Electronics/Computer/other_computer/";
+			case CPU: return "Electronics/Computer/other_computer";
 			case INK: return "Electronics/Imaging/printer";
 			case LAM: return "Miscellaneous/Electric_Housewares";
-			case LAS: return "Electronics/Imaging/printer/";
-			case MAC: return "Electronics/Computer/integrated_tower_lcd/";
-			case MIC: return "Miscellaneous/Electric_Housewares/";
-			case NOT: return "Electronics/Computer/laptop/";
+			case LAS: return "Electronics/Imaging/printer";
+			case MAC: return "Electronics/Computer/integrated_tower_lcd";
+			case MIC: return "Miscellaneous/Electric_Housewares";
+			case NOT: return "Electronics/Computer/laptop";
 			case OTH: return "Miscellaneous/Other";
-			case PHO: return "Electronics/Telephony/";
+			case PHO: return "Electronics/Telephony";
 			case REF: return "Miscellaneous/Electric_Housewares";
 			case SER: return "Electronics/Computer/server_tower";
-			case SPH: return "Electronics/Other/";
-			case SPS: return "Miscellaneous/Other/";
+			case SPH: return "Electronics/Other";
+			case SPS: return "Miscellaneous/Other";
 			case TEA: return "Miscellaneous/Electric_Housewares";
 			case LCD: return "Electronics/Display/computer_lcd";
-			default: return "Miscellaneous/Other/";
+			default: return "Miscellaneous/Other";
 		}
 	}
 	

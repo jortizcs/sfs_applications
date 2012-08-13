@@ -9,19 +9,13 @@
     <Button android:text="Change Current Location" android:id="@+id/changeCurrLoc" android:layout_width="match_parent" android:layout_height="wrap_content"></Button>
     <TextView android:text=" " android:id="@+id/spacer1" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
     <LinearLayout android:id="@+id/linearLayout2" android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="horizontal">
-        <TextView android:text="Name of Resource: " android:id="@+id/resNameLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-        <AutoCompleteTextView android:text="" android:id="@+id/resName" android:layout_width="match_parent" android:layout_height="wrap_content"></AutoCompleteTextView>
-    </LinearLayout>
-    <TextView android:text="Power Rating (Watts):   or   Current Draw (Amps):" android:id="@+id/powerCurrentLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/linearLayout3" android:orientation="horizontal">
-        <EditText android:text="" android:id="@+id/powerRating" android:layout_width="140dip" android:layout_height="wrap_content"></EditText>
-        <TextView android:text="" android:id="@+id/spacer3" android:layout_width="35dip" android:layout_height="wrap_content"></TextView>
-        <EditText android:text="" android:id="@+id/currentDraw" android:layout_width="140dip" android:layout_height="wrap_content"></EditText>
+        <TextView android:text="Meter ID: " android:id="@+id/meterIdLabel" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+        <AutoCompleteTextView android:text="" android:id="@+id/meterId" android:layout_width="match_parent" android:layout_height="wrap_content"></AutoCompleteTextView>
     </LinearLayout>
     <!-- <Spinner android:layout_height="wrap_content" android:id="@+id/resType" android:layout_width="150dip" android:layout_gravity="center"></Spinner>-->
     <Button android:text="Scan QR Code" android:id="@+id/scanQrc" android:layout_width="match_parent" android:layout_height="wrap_content"></Button>
     <TextView android:text=" " android:id="@+id/spacer6" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
-    <TextView android:layout_height="wrap_content" android:id="@+id/note" android:text="New resource will be added inside current location" android:layout_width="match_parent" android:layout_gravity="center_vertical"></TextView>
+    <TextView android:layout_height="wrap_content" android:id="@+id/note" android:text="New meter will be added inside current location" android:layout_width="match_parent" android:layout_gravity="center_vertical"></TextView>
         
     
 
