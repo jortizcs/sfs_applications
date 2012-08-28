@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+    <TableRow android:id="@+id/TableRow01" android:layout_width="wrap_content" android:layout_height="wrap_content">
+	<Button android:layout_height="wrap_content" android:id="@+id/startButton" android:layout_width="wrap_content" android:text="Start"></Button>
+	<Button android:layout_height="wrap_content" android:id="@+id/stopButton" android:layout_width="wrap_content" android:text="Stop"></Button>
+	<Button android:layout_height="wrap_content" android:id="@+id/quitButton" android:layout_width="wrap_content" android:text="Quit"></Button>
+	</TableRow>
+</LinearLayout>
