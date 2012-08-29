@@ -26,6 +26,8 @@ public class WifiScanReceiver extends BroadcastReceiver {
 	private static SFSConnector sfsconn = null;
 	private static SharedPreferences bufferPref = null;
 	private static ConcurrentHashMap<String, String> pubidHashMap = null;
+	
+	public static boolean isReporting= false;
 
 	public WifiScanReceiver(ConnAccessSampler wifiSensorCtrl, String locationPath, SharedPreferences dataBufPref) {
 	    super();
@@ -73,6 +75,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
   		if(ConnAccessSampler.scanModeEnabled){
 			Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "Scan Mode enabled; Recording");
 		    List<ScanResult> results = ConnAccessSampler.wifiMngr.getScanResults();
+		    isReporting = true;
 		    for (ScanResult result : results) {
 		    	try {
 		    		JSONArray newStreamBuf = new JSONArray();
@@ -142,6 +145,8 @@ public class WifiScanReceiver extends BroadcastReceiver {
 		}
   	} catch(Exception e){
   		e.printStackTrace();
+  	} finally {
+  		isReporting=false;
   	}
   }
   
@@ -159,8 +164,10 @@ public class WifiScanReceiver extends BroadcastReceiver {
 					postOk = sfsconn.postStreamData(stream_path, pubid, thisDatapt.toString());
 					if(postOk){
 						Log.i("ConnApp::" + "ConnApp::" + WifiScanReceiver.class.toString(), "\n\tposted: " + thisDatapt.toString());
+						ConnAccessSampler.debugString+= thisDatapt.toString() + "->" + stream_path + "\n";
 					} else {
 						newStreamBuf.put(thisDatapt);
+						ConnAccessSampler.debugString+= thisDatapt.toString() + "->" + stream_path + "SAVED\n";
 					}
 				}
 		
@@ -168,8 +175,10 @@ public class WifiScanReceiver extends BroadcastReceiver {
 				postOk = sfsconn.postStreamData(stream_path,pubid, datapt.toString());
 				if(postOk){
 					Log.i("ConnApp::" + "ConnApp::" + WifiScanReceiver.class.toString(), "\n\tposted: " + datapt.toString());
+					ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "\n";
 				} else {
 					newStreamBuf.put(datapt);
+					ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "SAVED\n";
 				}
 			} else {  //not in local buffer, so just try to post it and create a local buffer if the server is down
 				boolean postOk=true;
@@ -205,6 +214,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 				thisStreamBuf.put(datapt);
 				editor.remove(stream_path);
 				editor.putString(stream_path, thisStreamBuf.toString());
+				ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "SAVED \n";
 				
 				Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "saving in : " + GlobalConstants.BUFFER_DATA +" [" 
 						+ stream_path +", buffer=" + thisStreamBuf.toString());
@@ -214,6 +224,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 				editor.putString(stream_path, buf.toString());
 				Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "saving in : " + GlobalConstants.BUFFER_DATA +" [" 
 						+ stream_path +", buffer=" + buf.toString());
+				ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "SAVED \n";
 			}
 			editor.commit();
 		} catch(Exception e){

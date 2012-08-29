@@ -28,18 +28,20 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 		loc_path = Util.cleanPath(locationPath);
 		stream_path = loc_path + "/screen_state/" + ConnAccessSampler.localMacAddress + "/onoff_stream";
 		try {
-	    	URL hostport = new URL(GlobalConstants.HOST);
-	    	int port = hostport.getPort();
-	    	if(port==-1)
-	    		port=80;
-	    	sfs_server = new SFSConnector(hostport.getHost(), hostport.getPort());
-	    	
-	    	if(bufferPref==null)
-		        bufferPref = preferences;
-	    	if(pubidHashMap==null)
-	    		pubidHashMap = new ConcurrentHashMap<String,String>();
-	    	
-	    	setupReporting();
+			if(ConnAccessSampler.scanModeEnabled){
+		    	URL hostport = new URL(GlobalConstants.HOST);
+		    	int port = hostport.getPort();
+		    	if(port==-1)
+		    		port=80;
+		    	sfs_server = new SFSConnector(hostport.getHost(), hostport.getPort());
+		    	
+		    	if(bufferPref==null)
+			        bufferPref = preferences;
+		    	if(pubidHashMap==null)
+		    		pubidHashMap = new ConcurrentHashMap<String,String>();
+		    	
+		    	setupReporting();
+			}
 	    } catch(Exception e){
 			Log.e("ConnApp::", "", e);
 	    }

@@ -33,7 +33,7 @@ public class SFSConnector {
 			JSONObject resp = new JSONObject(CurlOps.get(GlobalConstants.HOST + "/time"));
 			return resp.getLong("Now");
 		} catch(Exception e){
-			Log.e("ConnApp::error", "", e);
+			Log.e("SFSCPnnector.ConnApp::error", "", e);
 			return -1L;
 		}
 	}

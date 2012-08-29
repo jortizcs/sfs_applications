@@ -11,7 +11,7 @@ public class GlobalConstants {
 	public static String INVHOME = "/buildings/home/inventory";
 	
 	public static String EXP_RT_PATH = "/exp";
-	public static String PHONE_INFO = "Jorge's Samsung Galaxy S3";
+	public static String PHONE_INFO = "";
 	
 	public static final String PREFS = "ConnAccessSamplerPreferences";
 	public static String BUFFER_DATA = "buffer";

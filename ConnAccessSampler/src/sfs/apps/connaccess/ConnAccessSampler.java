@@ -13,7 +13,6 @@ import sfs.apps.connaccess.GlobalConstants;
 import sfs.apps.connaccess.ConnAccessSampler;
 import sfs.apps.connaccess.WifiScanReceiver;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -23,20 +22,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+//import android.net.NetworkInfo;
 import android.content.Intent;
 import android.util.Log;
 import android.net.wifi.WifiInfo;
-/*import  android.app.Service;
-import android.os.IBinder;
-*/
 import sfs.lib.*;
+import android.widget.EditText;
+
 
 public class ConnAccessSampler extends Activity {
-	
-	private static final String DEFAULT_SPACE = GlobalConstants.SPACESHOME;
-	private static boolean settingGlobals = false;
 	protected static WifiManager wifiMngr;
 	protected static WifiInfo wifiInfo;
 	protected static ConnectivityManager connMngr;
@@ -44,13 +40,10 @@ public class ConnAccessSampler extends Activity {
 	protected static BroadcastReceiver screenEventReceiver;
 	protected static boolean scanModeEnabled = false;
 	protected static final int scanTime = 10; //(seconds)
-	private static int countDownCnter = ConnAccessSampler.scanTime;
 	protected static Timer timer = null;
 	protected static String currLocString =null;
 	protected static String localMacAddress = null;
 	
-	private static ProgressDialog wifiProgDialog;
-	private static boolean wifiDialogIsActive=false;
 	
 	private static SharedPreferences bufferPref = null;
 	private static ConcurrentHashMap<String, String> pubidHashMap = null;
@@ -60,7 +53,13 @@ public class ConnAccessSampler extends Activity {
 	
 	public static boolean isConnectedToSfs = false;
 	
-	private static final long samplePeriod = 5000L;
+	private static final long samplePeriod = 10000L;
+	
+	private static TextView statusText = null;
+	protected static TextView debugText = null;
+	public static String debugString = "";
+	protected static EditText infoText=null;
+	protected static SharedPreferences pref = null;
 	
 	public static enum ScanType {
 		NONE, WIFI
@@ -76,6 +75,7 @@ public class ConnAccessSampler extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
+        
         if(bufferPref==null){
 	        bufferPref = this.getSharedPreferences(GlobalConstants.BUFFER_DATA, 
 					android.content.Context.MODE_PRIVATE);
@@ -87,12 +87,25 @@ public class ConnAccessSampler extends Activity {
         Log.i("ConnApp::" + ConnAccessSampler.class.toString(), host + ":" + port);
         sfs_server = new SFSConnector(host, port);
         
+        //set text view
+        statusText = (TextView)findViewById(R.id.stateText);
+        
+        //debug text view
+        debugText = (TextView)findViewById(R.id.debugText);
+        
+        //load phone info
+        pref = this.getSharedPreferences(GlobalConstants.PREFS, MODE_PRIVATE);
+        GlobalConstants.PHONE_INFO=pref.getString("phone_info", "");
+        
         //set up the scan button
         Button startButton = (Button) findViewById(R.id.startButton);
         startButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v){
-        		scanModeEnabled=true;
-        		startScanning();
+        		if(GlobalConstants.PHONE_INFO.length()>0){
+	        		scanModeEnabled=true;
+	        		statusText.setText("ENABLED");
+	        		startScanning(v);
+        		}
         	}
         });
         
@@ -100,7 +113,8 @@ public class ConnAccessSampler extends Activity {
         stopButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v){
         		scanModeEnabled=false;
-        		timer.cancel();
+        		statusText.setText("DISABLED");
+        		//timer.cancel();
         	}
         });
         
@@ -108,13 +122,28 @@ public class ConnAccessSampler extends Activity {
         quitButton.setOnClickListener(new OnClickListener() {
         	public void onClick(View v){
         		scanModeEnabled=false;
-        		timer.cancel();
+        		statusText.setText("QUIT");
+        		//timer.cancel();
         		System.exit(0);
+        	}
+        });
+        
+        infoText = (EditText)findViewById(R.id.EditText01);
+        Button setInfoButton = (Button) findViewById(R.id.setButton);
+        if(GlobalConstants.PHONE_INFO.length()>0){
+        	infoText.setText(GlobalConstants.PHONE_INFO);
+        }
+        setInfoButton.setOnClickListener(new OnClickListener() {
+        	public void onClick(View v){
+        		GlobalConstants.PHONE_INFO = infoText.getText().toString();
+        		SharedPreferences.Editor editor = pref.edit();
+        		editor.putString("phone_info", GlobalConstants.PHONE_INFO);
+        		editor.commit();
         	}
         });
     }
     
-    public void startScanning(){
+    public void startScanning(View v){
     	
     	// INITIALIZE RECEIVER
         //set up the receivers
@@ -136,10 +165,10 @@ public class ConnAccessSampler extends Activity {
     		filter.addAction(Intent.ACTION_SCREEN_OFF);
 	    	registerReceiver(screenEventReceiver, filter);
     	}
-    	
-    	t = ScanType.WIFI;
+    	v.postDelayed(new ScanSetTask(GlobalConstants.EXP_RT_PATH, v), samplePeriod);
+    	/*t = ScanType.WIFI;
     	timer = new Timer();
-    	timer.scheduleAtFixedRate(new ScanSetTask(GlobalConstants.EXP_RT_PATH), 0L, samplePeriod);
+    	timer.scheduleAtFixedRate(new ScanSetTask(GlobalConstants.EXP_RT_PATH), 0L, samplePeriod);*/
     }
     
     protected class ScanSetTask extends TimerTask{
@@ -148,10 +177,12 @@ public class ConnAccessSampler extends Activity {
     	private SFSConnector sfsconn = null;
     	private boolean exp_paths_set = false;
     	private String stream_path = null;
+    	private View view = null;
     	
     	
-    	public ScanSetTask(String locationPath){
+    	public ScanSetTask(String locationPath, View v){
     		loc_path = Util.cleanPath(locationPath);
+    		view = v;
     		try {
     			loc_path = Util.cleanPath(locationPath);
 			    stream_path = loc_path + "/conn_state/" + ConnAccessSampler.localMacAddress + "/conn_stream";
@@ -166,8 +197,15 @@ public class ConnAccessSampler extends Activity {
     	}
     	
     	public void run(){
-    		getSFSTime();
-			wifiMngr.startScan();
+    		Log.i("ConnApp::", "RUNNING_BACKGROUND_TASK");
+    		if(ConnAccessSampler.scanModeEnabled){
+	    		getSFSTime();
+	    		if(!WifiScanReceiver.isReporting && serverRefTime>0)
+	    			wifiMngr.startScan();
+	    		debugText.setText(debugString);
+	    		debugString="";
+    		}
+    		view.postDelayed(new ScanSetTask(GlobalConstants.EXP_RT_PATH, view), samplePeriod);
 		}
 		
 		public void getSFSTime(){
@@ -184,8 +222,8 @@ public class ConnAccessSampler extends Activity {
 						long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
 				  		JSONObject datapt = new JSONObject();
 				  		datapt.put("ts", ts);
-				  		datapt.put("connection_active",1);
-						Log.i("ConnApp::" + ScanSetTask.class.toString(), "Time_set=" + serverRefTime + "; connection_active=" + datapt.toString());
+				  		datapt.put("value",1);
+						Log.i("ConnApp::" + ScanSetTask.class.toString(), "Time_set=" + serverRefTime + "; value=" + datapt.toString());
 						
 						//post it or buffer it
 						String pubid=null;
@@ -214,8 +252,8 @@ public class ConnAccessSampler extends Activity {
 						long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
 				  		JSONObject datapt = new JSONObject();
 				  		datapt.put("ts", ts);
-				  		datapt.put("connection_active",0);
-						Log.i("ConnApp::" + ScanSetTask.class.toString(), "No connection to SFS"+ "; connection_active=" + datapt.toString());
+				  		datapt.put("value",0);
+						Log.i("ConnApp::" + ScanSetTask.class.toString(), "No connection to SFS"+ "; value=" + datapt.toString());
 						bufferIt(datapt);
 					}
 				} else {
@@ -362,7 +400,7 @@ public class ConnAccessSampler extends Activity {
 							sfs_server.mkrsrc(loc_path+"/conn_state", ConnAccessSampler.localMacAddress, "default");
 							JSONObject props = new JSONObject();
 		    				props.put("info", GlobalConstants.PHONE_INFO);
-		    				sfs_server.overwriteProps(loc_path, props.toString());
+		    				sfs_server.overwriteProps(loc_path+"/conn_state/"+ConnAccessSampler.localMacAddress, props.toString());
 						}
 					}
 				} else {
