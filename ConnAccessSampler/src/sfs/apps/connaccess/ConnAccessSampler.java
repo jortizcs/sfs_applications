@@ -54,6 +54,7 @@ public class ConnAccessSampler extends Activity {
 	public static boolean isConnectedToSfs = false;
 	
 	private static final long samplePeriod = 10000L;
+	private static int sampleCounter = 0;
 	
 	private static TextView statusText = null;
 	protected static TextView debugText = null;
@@ -200,8 +201,12 @@ public class ConnAccessSampler extends Activity {
     		Log.i("ConnApp::", "RUNNING_BACKGROUND_TASK");
     		if(ConnAccessSampler.scanModeEnabled){
 	    		getSFSTime();
-	    		if(!WifiScanReceiver.isReporting && serverRefTime>0)
+	    		if(!WifiScanReceiver.isReporting && serverRefTime>0 && ConnAccessSampler.sampleCounter==6){
+	    			ConnAccessSampler.sampleCounter=0;
 	    			wifiMngr.startScan();
+	    		} else {
+	    			ConnAccessSampler.sampleCounter+=1;
+	    		}
 	    		debugText.setText(debugString);
 	    		debugString="";
     		}
@@ -213,11 +218,11 @@ public class ConnAccessSampler extends Activity {
 				if(sfs_server!=null){
 					setupReporting();
 					long t = sfs_server.getTime();
-					long now = System.currentTimeMillis()/1000;
+					long now = System.currentTimeMillis();
 					JSONArray newStreamBuf = new JSONArray();
 					if(t>0){
 						isConnectedToSfs=true;
-						ConnAccessSampler.localReftime = System.currentTimeMillis()/1000;
+						ConnAccessSampler.localReftime = now;
 						serverRefTime = t;
 						long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
 				  		JSONObject datapt = new JSONObject();

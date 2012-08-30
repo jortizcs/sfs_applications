@@ -70,7 +70,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context c, Intent intent) {
   	try {
-  		long now = (new Date()).getTime()/1000;
+  		long now = System.currentTimeMillis();
   		long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
   		if(ConnAccessSampler.scanModeEnabled){
 			Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "Scan Mode enabled; Recording");

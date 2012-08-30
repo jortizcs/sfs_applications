@@ -49,7 +49,7 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 	
 	public void onReceive(Context c, Intent intent) {
 		try {
-			long now = System.currentTimeMillis()/1000;
+			long now = System.currentTimeMillis();
 	  		long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
 	  		JSONArray newStreamBuf = new JSONArray();
 	  		JSONObject datapt = new JSONObject();
