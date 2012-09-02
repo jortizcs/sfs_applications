@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="http://yui.yahooapis.com/3.6.0/build/yui/yui-min.js"></script>
+    <script src="./build/wireit-loader/wireit-loader.js"></script>
+    <script>YUI_config.groups.wireit.base = './build/';</script>
+    <script>
+      // Create a new YUI instance and populate it with the required modules.
+      YUI().use('arrow-wire', function (Y) {
+            // ArrowWire is available and ready for use. Add implementation
+ var mygraphic = new Y.Graphic({render: "#layer"});
+ var wire = mygraphic.addShape({
+    type: Y.ArrowWire,
+    stroke: {
+      weight: 4,
+      color: "rgb(173,216,230)" 
+    },
+    src: {
+      getXY: function() {
+        return [30,60];
+      }
+    },
+    tgt: {
+      getXY: function() {
+        return [250,150];
+      }
+    }
+  });
+
+  });
+     </script>
+  </head>
+  <body>
+  <div style="position: relative; width: 300px; height: 200px;" id="layer"></div>
+  </body>
+</html>
