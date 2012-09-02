@@ -17,14 +17,17 @@
 ###WireIt Grapher
 * [WireIt](https://github.com/neyric/wireit)
 * [More API Docs](http://dev.lshift.net/james/wireit/wireit/guide.html)
+
 ###Restarting the server  
         apachectl restart
+
 ###Getting php and django to coexist
 * Look at httpd.conf in /etc/apache2
+
 ***
 
 
-#EnergyLens site plan by page**
+#EnergyLens site plan by page
 
 * Link-header batch
 * Link to landing page
