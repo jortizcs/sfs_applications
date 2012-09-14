@@ -7,7 +7,7 @@
 <script>
   YUI().use('arrow-wire', 'container', function (Y) {
     var layerEl=Y.once('#layer');
-    c1 = new Y.Container({
+    new Y.Container({
     children: [
       /*terminal points*/
       //{ align: {points:["tl", "tl"]} },
@@ -48,14 +48,47 @@
 <p>
 <?php
   require_once("sfslib.php");
+  //keep a reference to sub object
+  //encapsulate host and port
+  function isSourcePath($path=null,$sfs_obj=null){
+    global $host,$port;
+    $home_path="http://".$host.":".$port;
+    $subs=get("http://".$host.":".$port."/sub");  
+    $subs=json_decode($subs,true); 
+    foreach($subs["children"] as $index=>$child_id){
+      echo $child_id;
+      $child=get($home_path."/sub/".$child_id);
+      $child=json_decode($child,true);
+      if(isset($child["sourcePath"])){
+      var_dump($child["sourcePath"]);
+      } else if (isset($child["sourcePaths"])){
+      var_dump($child["sourcePaths"]);
+      }
+    }
+  }
+  function createSubscription(){
+
+  }
+  function createOutputStream(){
+  }
   $sfs = new SFSConnection();
   $sfs->setStreamFSInfo("ec2-184-169-204-224.us-west-1.compute.amazonaws.com",8080);
   echo $sfs->getSFSTime();
-  echo 'ok';
+  echo $host;
+  echo $port;
+  isSourcePath();
   $json= get("ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080");
-  echo gettype($json);
-  $json=json_decode($json);
-  var_dump($json);
+  #read all subs to build nodes and destination
+  $json=get("energylens.sfsprod.is4server.com:8080/sub/8-18289");
+  $node=json_decode($json, true);
+  var_dump($node);
+  $srcArr=$node["sourcePaths"];
+  $dest=$node["destination"];
+  //insert rescursive defn to build other nodes
+  var_dump($srcArr);
+  foreach($srcArr as $index=>$value){
+    echo $srcArr[$index];
+  }
   if(isset($_GET['graph'])){
     //Allow JS to talk to php with ajax via a get or post request
     echo 'getting graph';
