@@ -1,0 +1,218 @@
+*{
+  font-family: "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;
+}
+
+
+ul {
+  margin:0;
+}
+
+a { 
+  text-decoration:none;
+  transition: all 0.7s;
+  -moz-transition: all 0.7s; /* Firefox 4 */
+  -webkit-transition: all 0.7s; /* Safari and Chrome */
+  -o-transition: all 0.5s; /* Opera */
+}
+a:hover {
+  color:#0cf;
+}
+
+/*Main Containers*/
+
+body {
+  max-width:100%;
+  min-width:200px;
+  margin:0 auto;
+  padding:0;
+  position:relative;
+}
+
+#wrap{
+  position:relative;width:960px; margin:0 auto;
+}
+
+/*Header*/
+#masthead{
+  height: 100px;
+  width:100%;
+  background:#003399 url(./img/highlight.png) no-repeat top left;
+}
+
+#masthead_bg {
+  background-color:#003399; 
+  height: 100px;
+  width:100%;
+  position:absolute;
+}
+
+#masthead nav {
+  float:right;  
+  color:white; 
+  margin-top:31px;
+  padding-right:80px;
+}
+
+#masthead ul li {
+  list-style-type:none;
+  display:inline;
+  text-decoration:none;
+  line-height:14px;
+}
+
+nav a{
+  color:white;
+}
+#masthead nav a::before {
+  content:"/ ";
+}
+#masthead nav li:first-child a::before{
+  content: "";
+}
+/* Player */
+/*http://stackoverflow.com/questions/1776915/how-to-center-absolute-element-in-div*/
+#play_btn {
+  transition: all 0.7s;
+  -moz-transition: all 0.7s; /* Firefox 4 */
+  -webkit-transition: all 0.7s; /* Safari and Chrome */
+  -o-transition: all 0.5s; /* Opera */
+  cursor:pointer;
+  width:135px;
+  height:135px;
+  position:absolute;
+  left:0;
+  right:0;
+  margin: 125px auto 0 auto;
+  background:url(./img/play_btn_hover.png) no-repeat top center;
+}
+#play_btn:hover {
+  background: url(./img/play_btn.png) no-repeat top center;
+}
+#nexus_one {
+  position:relative;
+  width:283px;
+  height:562px;
+  background:url(./img/Nexus_One.png) no-repeat top center;
+  margin: -40px auto 0 auto;
+}
+/*Spotlight Containers*/
+#tagline {
+  color:#666666;
+  font-family: "Book Antiqua", "Myriad Pro", "Trebuchet MS", Arial, Sans-Serif;
+  font-size:24px;
+  float:left;
+}
+
+#gplay_btn{
+  margin-top:20px;
+  margin-left: 50px;
+  cursor:pointer;
+  width:170px;
+  height:60px;
+  float:left;
+  background:url(./img/get_it_on_play_logo_large.png) no-repeat top center;
+  margin-bottom:20px;
+}
+
+#left_section article {
+  width:145px;
+  float:left;
+}
+
+#left_section article h2 {
+  text-align:center;
+}
+#left_section article {margin-left: 30px;}
+#left_section article:first-of-type {
+  margin-left:0 !important;
+}
+
+section {
+  color:#999999;
+}
+
+section a{
+  color: #0066CC;
+}
+
+section h2 {
+  font-size:18px;
+  font-weight:600;
+}
+
+#left_section {
+  width:502px;
+  float:left;
+  margin-right:10px;
+  min-height:480px;
+}
+
+#right_section {
+  width:418px;
+  max-width:48%;
+  min-height:480px;
+  float:right;
+  margin-left:10px;
+}
+
+/*Footer*/
+
+footer {
+  position:relative;
+  bottom:0px;
+  min-height:30px;
+}
+
+footer a,
+footer {
+  color:#999999
+}
+
+footer p {
+  margin:0;
+  padding:0;
+}
+
+#footer_line{
+  position:absolute;
+  bottom:0;
+  width:100%;
+}
+p#copyright,
+footer ul li {
+  list-style:none;
+  display:inline;
+}
+footer ul{
+  float:left;
+}
+#copyright {
+  float:left;
+}
+#powered_by {
+  margin-top:-28px;
+  float:right;
+}
+#powered_by img{
+  transition: all 0.7s;
+  -moz-transition: all 0.7s; /* Firefox 4 */
+  -webkit-transition: all 0.7s; /* Safari and Chrome */
+  -o-transition: all 0.5s; /* Opera */
+
+}
+#powered_by img:hover {
+  opacity:0.6;
+}
+
+/* Clearfix */
+/* http://css-tricks.com/snippets/css/clear-fix/ */
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+  }
+* html .clearfix             { zoom: 1; } /* IE6 */
+*:first-child+html .clearfix { zoom: 1; } /* IE7 */

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html>
+ <head>
+  <title>WireIt Example, handle wire events</title>
+  
+  
+<!-- YUI -->
+<link rel="stylesheet" href="http://yui.yahooapis.com/combo?3.6.0/build/cssreset/reset-min.css&3.6.0/build/cssfonts/fonts-min.css">
+<script src="http://yui.yahooapis.com/3.6.0/build/yui/yui.js"></script>
+
+<script type="text/javascript" src="../lib/excanvas.js"></script>
+
+<!-- WireIt -->
+<link rel="stylesheet" type="text/css" href="../assets/WireIt.css" />
+<script src="../src/loader.js"  type='text/javascript'></script>
+
+
+<style>
+
+div.wireInfos {
+	position: absolute;
+	background-color: #AADDFF;
+	border: 2px solid #3366CC;
+	z-index: 10;
+	padding: 10px;
+}
+
+</style>
+
+<script>
+
+YUI_config.groups.wireit.base = '../src/';
+YUI({filter: 'raw', combine: false}).use('wire', 'bezier-wire', 'terminal', 'layer', function(Y) {
+
+	
+	var layer = new Y.Layer({});
+	
+	
+	// The wire tooltip
+	var wireInfos = Y.WireIt.cn('div', {className: 'wireInfos'}, {display: 'none'}, "<div id='wireTooltip'></div>");
+	layer.el.appendChild(wireInfos);
+	// method to close the tooltip
+	var closeWireInfos = function(e) {
+		e.stop(); 
+		wireInfos.style.display = "none";
+	};
+	// close button
+	var wireClose = Y.WireIt.cn('div', {className: "WireIt-Container-closebutton"});
+	wireInfos.appendChild(wireClose);
+	Y.one(wireClose).on('click', closeWireInfos);
+	
+	// Generate the tooltip contents
+	Y.Event.onAvailable('wireTooltip', function() {
+		var el = Y.one('#wireTooltip');
+		el.innerHTML = "Wires properties :<br />name <input type='text'/><br />";
+		
+		var okButton = Y.WireIt.cn('button', null, null, 'Ok');
+		el.appendChild(okButton);
+		Y.one(okButton).on('click', closeWireInfos);
+		
+		var cancelLink = Y.WireIt.cn('a', {href: "#"}, null, 'cancel');
+		el.appendChild(cancelLink);
+		Y.one(cancelLink).on('click', closeWireInfos);
+	});
+	
+	
+	
+	var wireClick = function(e, params) {
+		var xy = params[1];
+		
+		var l = this.element.style.left,
+			t = this.element.style.top;
+		var li = parseInt(l.substr(0, l.length-2),10),
+			ti = parseInt(t.substr(0, t.length-2),10);
+		wireInfos.style.left = (li+xy[0])+"px";
+		wireInfos.style.top = (ti+xy[1])+"px";
+		wireInfos.style.display = "";
+	},
+	
+		wireRed = function() {
+			this.color = 'rgb(255, 0, 0)';
+	  		this.redraw();
+		},
+		wireBlue = function() {
+			this.color = 'rgb(173, 216, 230)';
+			this.redraw();
+		};
+		
+	// Generate a random layer
+	for(var i = 0 ; i < 5 ; i++) {
+		layer.addContainer({
+			terminals: [ {direction: [0,1], offsetPosition: {bottom: -13, left: 25}, editable: false }],
+			title: "Block #"+i,
+			position: [ Math.floor(Math.random()*800)+30, Math.floor(Math.random()*300)+30 ]
+		});
+	}
+	for(var i = 0 ; i < 7 ; i++) {
+		var w = layer.addWire({
+			src: {moduleId: Math.floor(Math.random()*5), terminalId: 0},
+			tgt: {moduleId: Math.floor(Math.random()*5), terminalId: 0}
+		});
+
+		// Subscribe to the wire events
+		w.on('eventMouseIn', wireRed, w, true);
+		w.on('eventMouseOut', wireBlue, w, true);
+		w.on('eventMouseClick', wireClick, w, true);
+	}
+	
+});
+
+
+</script>
+</head><body></body></html>

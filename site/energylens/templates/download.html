@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block primary %}
+  <section>
+  	<h1>Download Energylens App</h1>
+  	<p>Compatible with devices running Android.</p>
+  	<a href="#">Download Now</a>
+    <h1>Installation Instructions</h1>
+    <h2>Equipment</h2>
+    <ol>
+      <li>Energy Lens Android App</li>
+      <li>ACME sensor for each item or set of items you wish to track</li>
+      <li><a href="qrcgen"> QR Codes </a> to tape to each item</li>
+    </ol>
+    <h2>Setup</h2>
+    <ol>
+      <li>Print your <a href="qrcgen">QR codes</a> from the energy lens site. It is suggested that you print the QR codes on stickers.</li>
+      <li>Attach a <a href="qrcgen"> QR code </a> for each item you want to audit.</li>
+      <li>The basic gestures fall into three categories: registration, linking, and acquisition. Registration. It consist of a single tag swipe and entering information through the screen. Linking gestures  consist of two swipes and the press of button to conﬁrm the un/linking.</li>
+
+      <li>Open the Energy Lens Mobile Application and register the QR code  by scanning the QR code with your phones camera.</li>
+    </ol> 
+    <h2>View</h2>
+    <ol>
+      <li>The acquisition swipe is a single swipe, select the data aggregate you wish to view and view the data</li>
+    </ol>
+  </section>
+{% endblock %}

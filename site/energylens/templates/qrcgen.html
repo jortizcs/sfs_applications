@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load qr_tags %}
+{% block primary %}
+    {% if tinyurls  %}
+    <table style="margin: 2em auto;"border=1 cellspacing="10" cellpadding="10">
+      {% for i in tinyurls %}
+        {% if forloop.counter0|divisibleby:'4' %}
+          <tr>
+        {% endif %}
+        <td style="border: 1px dashed;"><center>{% qr_from_text i "s" %}</center></td>
+        {% if forloop.counter|divisibleby:'4' %}
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </table>
+    {% else %}
+      <form style="width:50%; margin: 2em auto;"action="qrcgen" method="get">
+        <fieldset style="border:1px solid silver;">
+        <legend> QR Code Generator</legend>
+        <input type="text" name="num" placeholder="0"> <br><br>
+        <input type="submit"  value="Generate QR Code(s)">
+        </fieldset>
+      </form>
+    {% endif %}
+{% endblock %}

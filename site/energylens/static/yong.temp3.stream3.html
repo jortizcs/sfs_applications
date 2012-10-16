@@ -1,0 +1,56 @@
+<html>
+<head><title>graphite_exmaple</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="jquery.graphite.js"></script>
+<script>
+function reloadImg(id) {
+	var obj = document.getElementById(id);
+	var src = obj.src;
+	var pos = src.indexOf('&random=');
+	if(pos >= 0){
+		src = src.substr(0,pos);
+	}
+	var random = parseInt(Math.random()*10000);
+	obj.src = src + '&random=' + random;
+	return false;
+}
+var refreshIntervalId;
+var isIntervalOn = false;
+var targets = [];
+function start(){
+	$.fn.graphite.defaults.url = "http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com:8080/render"
+	$("#graph").graphite({
+		from: "-24h",
+		target:["yong.temp3.stream3"],
+		title: "System Load",
+	});
+	refreshIntervalId=setInterval('$.fn.graphite.update($("#graph"))',1000);
+	isIntervalOn = true;
+}
+function startInterval(){
+	if(!isIntervalOn){
+		refreshIntervalId=setInterval('$.fn.graphite.update($("#graph"))',1000);
+		isIntervalOn = true;
+	}
+}
+function stopInterval(){
+	if(isIntervalOn){
+		clearInterval(refreshIntervalId);
+		isIntervalOn = false;
+	}
+}
+function changeTarget(name){
+	$.fn.graphite.update($("#graph"),{target:[name]});
+	targets=[name];
+}
+window.onload = start;
+</script>
+</head>
+<body>
+<h2>/yong/temp3/stream3</h2>
+<img id="graph" />
+<a href="#" onClick='$.fn.graphite.update($("#graph"))'>reload</a><br />
+<a href="#" onClick='startInterval()'>start auto-reloading</a>
+<a href="#" onClick='stopInterval()'>stop auto-reloading</a>
+</body>
+</html>
