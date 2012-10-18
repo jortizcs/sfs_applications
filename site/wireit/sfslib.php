@@ -40,7 +40,8 @@ class SFSConnection{
 			$request["deviceName"]=$name;
 			$request["resourceType"]=$type;
 		} elseif(strcasecmp($type, "genpub")==0) {
-			$request["operation"]="create_generic_resource";
+      echo "generating stream: "+$name;
+			$request["operation"]="create_generic_publisher";
 			$request["resourceName"]=$name;
 		}
 
