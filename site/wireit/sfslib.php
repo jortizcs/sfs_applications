@@ -202,6 +202,16 @@ class SFSConnection{
 		}
 		return $res;
 	}
+  public function destroyResource($path){
+    global $host, $port;
+    $url = "http://".$host.":".$port.$path;
+    if(exists($path)){
+      $response=delete($url);  
+      return $reponse;
+    } else {
+      return FALSE;
+    }
+  }
 
 }
 

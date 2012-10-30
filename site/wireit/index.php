@@ -4,11 +4,31 @@
 <script src="http://yui.yahooapis.com/3.6.0/build/yui/yui-min.js"></script>
 <script src="./build/wireit-loader/wireit-loader.js"></script>
 <script>YUI_config.groups.wireit.base = './build/';</script>
+<style>
+</style>
 </head>
 <body>
-<p>
+<div>
+<form method="post" action="./helpers/create_stream.php">
+<label for="parent">Parent(Leave blank top level)</label>
+<input id="parent" type="text" name="parent" placeholder=""></input><br>
+<label for="new_stream">New Stream</label>
+<input id="new_stream"type="text" name="new_stream" placeholder="Relative Path to stream"></input><br>
+<button value="Create Process" name="Create Process">Create Process</button>
+</form>
+<form method="post" action="./helpers/stop_process.php">
+<label for="stop">Stop Stream</label>
+<input name="stop" type="text" placeholder="Relative Path to stream">
+</input>
+<button value="Destroy Process" name="Destroy Process">Destroy Process</button>
+</form>
+<form method="post" action="./helpers/update_process.php">
+<button value="Update Process" name="Update Process">Update Process</button>
+</form>
+</div>
 <?php
   require_once("sfslib.php");
+  require_once("helpers/create_stream.php");
   //keep a reference to sub object
   //encapsulate host and port
   function isSourcePath($path=null,$sfs_obj=null){
@@ -123,12 +143,9 @@ EOD;
     echo getAllStreams(); 
   }
 ?>
-</p>
-<?php
-  //generateAllGraphs();
-?>
-<div style="position: relative; width: 300px; height: 200px;" id="layer"></div>
-<script>
+
+<!--<div style="position: relative; width: 300px; height: 200px;" id="layer"></div>-->
+<!--<script>
   YUI().use('arrow-wire', 'container', function (Y) {
     var layerEl=Y.once('#layer');
     new Y.Container({
@@ -183,6 +200,6 @@ EOD;
     //graph all stream
     //end callback
     });
-</script>
+</script>-->
 </body>
 </html>
