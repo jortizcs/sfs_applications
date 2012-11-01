@@ -13,10 +13,11 @@
     if(substr($path,0,1) != "/"){
         $path = "/$path";
     }
+    global $host, $port;	
+    $url = "http://$host:$port$path";
+    echo $url;
     if($sfs->exists($path)){
-      global $host, $port;	
-      $url = "http://$host:$port$path";
-      $response=delete($url);
+      $response=$sfs->destroyResource($path);
       echo $response;
       if($response){
         echo "response";
@@ -29,6 +30,7 @@
       return False;
     }
   }
+
   if (isset($_POST['stop'])){
     stop_process($_POST['stop']);
   }

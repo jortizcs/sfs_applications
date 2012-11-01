@@ -11,10 +11,10 @@
 <div>
 <form method="post" action="./helpers/create_stream.php">
 <label for="parent">Parent(Leave blank top level)</label>
-<input id="parent" type="text" name="parent" placeholder=""></input><br>
-<label for="new_stream">New Stream</label>
-<input id="new_stream"type="text" name="new_stream" placeholder="Relative Path to stream"></input><br>
-<button value="Create Process" name="Create Process">Create Process</button>
+<input id="parent" type="text" name="parent" placeholder=""></input>
+<label for="new_stream">New Resource</label>
+<input id="new_stream"type="text" name="new_stream" placeholder="Relative Path to stream"></input>
+<button value="Create Process" name="Create Process">Create Resource</button>
 </form>
 <form method="post" action="./helpers/stop_process.php">
 <label for="stop">Stop Stream</label>
@@ -23,6 +23,8 @@
 <button value="Destroy Process" name="Destroy Process">Destroy Process</button>
 </form>
 <form method="post" action="./helpers/update_process.php">
+<label for="update_proc">Update Process</label>
+<input id="update_proc" name="update_proc" placeholder="proc name"></input>
 <button value="Update Process" name="Update Process">Update Process</button>
 </form>
 </div>

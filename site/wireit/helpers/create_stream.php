@@ -26,10 +26,10 @@
     if($sfs->exists($relative)){
       echo "stream exists";
     } else {
-      echo $parent;
+      echo $parent.$new_stream;
       echo $new_stream;
       $response=create_stream($parent,$new_stream);
-      die("creating");
+      //die("creating");
       if($response){
         echo $response;
       }else{
