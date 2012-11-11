@@ -10,7 +10,10 @@ class SFSConnection{
 	 */
 	private $host="";
 	private $port=8080;
-
+  /*__construct($sfshost,$sfsport){
+    $this->host=$sfshost;
+    $this->port=$sfsport;
+  }*/
 	public function setStreamFSInfo($sfshost, $sfsport){
 		global $host,$port;
 	        $host= $sfshost;
@@ -25,6 +28,7 @@ class SFSConnection{
 	 * Supported types: default, devices, device, genpub
 	 */
 	public function mkrsrc($path, $name, $type){
+    $path=$this->pad_path($path);
 		$request = array();
 		if(strcasecmp($type,"default")==0){
 			$request["operation"]="create_resource";
@@ -126,9 +130,16 @@ class SFSConnection{
 		}
 		return 0;
 	}
+  private function pad_path($path){
+    if(substr($path,0,1) != "/"){
+        $path = "/$path";
+    }
+    return $path;
+  }
 
 	public function exists($path){
-		global $host, $port;	
+    $path=$this->pad_path($path);
+    global $host, $port;	
 		$url = "http://".$host.":".$port.$path;
 		//echo "checking url: ".$url."\n";
 		$res = get($url);
@@ -139,6 +150,7 @@ class SFSConnection{
 	}
 
 	public function tsQuery($path, $timestamp){
+    $path=$this->pad_path($path);
 		global $host, $port;
 		$url = "http://".$host.":".$port.$path."?query=true&ts_timestamp=".$timestamp;
 		$res = get($url);
@@ -149,6 +161,7 @@ class SFSConnection{
 	}
 
 	public function tsRangeQuery($path, $tslowerbound, $includelb, $tsupperbound, $includeub){
+    $path=$this->pad_path($path);
 		global $host, $port;
 		$queryParams = "?query=true&";
 		if($includelb == true) {
@@ -172,6 +185,7 @@ class SFSConnection{
 	}
 
 	public function tsNowRangeQuery($path, $tslowerbound,$includelb, $includeub){
+    $path=$this->pad_path($path);
 		global $host, $port;
 		$queryParams = "?query=true&";
 		if($includelb == true) {
@@ -194,6 +208,7 @@ class SFSConnection{
 	}
 	
 	public function getSFSTime(){
+    $path=$this->pad_path($path);
 		global $host, $port;
 		$url = "http://".$host.":".$port."/time/";
 		$res = get($url);
@@ -203,6 +218,7 @@ class SFSConnection{
 		return $res;
 	}
   public function destroyResource($path){
+    $path=$this->pad_path($path);
     global $host, $port;
     $url = "http://".$host.":".$port.$path;
     $response=delete($url);  

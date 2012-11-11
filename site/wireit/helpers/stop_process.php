@@ -1,12 +1,9 @@
 <?php
   require_once('../sfslib.php');
   require_once('../curl_ops.php');
-  const TYPE_GENERIC_PUBLISHER="genpub";
-  const TYPE_DEVICE="device";
-  const TYPE_DEVICES="devices";
-  const TYPE_DEFAULT="default";
+  require_once('../constants.php');
   $sfs = new SFSConnection();
-  $sfs->setStreamFSInfo("ec2-184-169-204-224.us-west-1.compute.amazonaws.com",8080);
+  $sfs->setStreamFSInfo(CUR_HOST,8080);
 
   function stop_process($path){
     global $sfs;

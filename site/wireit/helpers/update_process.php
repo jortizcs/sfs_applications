@@ -2,12 +2,24 @@
   require_once('../sfslib.php');
   require_once('../curl_ops.php');
   require_once('../constants.php');
-  const TYPE_GENERIC_PUBLISHER="genpub";
-  const TYPE_DEVICE="device";
-  const TYPE_DEVICES="devices";
-  const TYPE_DEFAULT="default";
+  require_once('../config.php');
   $sfs = new SFSConnection();
   $sfs->setStreamFSInfo(CUR_HOST,8080);
+  function return_json($path){
+    global $sfs;
+    global $host, $port;
+    if(substr($path,0,1) != "/"){
+        $path = "/$path";
+    }
+    $url = "http://$host:$port$path";
+    $response=get($url);
+    //echo $response."<br><br><br>";
+    //var_dump($response);
+    //echo "<br>";
+    //return json_encode(json_decode($response,true));
+    return (json_encode($response));
+
+  }
   function loadPropsToForm($path){
     global $sfs;
     global $host, $port;
@@ -17,7 +29,7 @@
     $url = "http://$host:$port$path";
     $response=get($url);
     $response_array=json_decode(get($url),true);
-    var_dump($response_array);
+    //var_dump($response_array);
     if(count($response_array) > 0){
       echo '<form method="post">';
     }
@@ -46,8 +58,10 @@
       if(substr($proc,0,1) != "/"){
         $proc= "/proc/$proc";
       }
+      //die($proc);
       if($sfs->exists($proc)){
-        loadPropsToForm($proc);
+        echo return_json($proc);
+        //loadPropsToForm($proc);
       } else {
         echo "process not found";
       }

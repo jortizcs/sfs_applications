@@ -4,7 +4,95 @@
 <script src="http://yui.yahooapis.com/3.6.0/build/yui/yui-min.js"></script>
 <script src="./build/wireit-loader/wireit-loader.js"></script>
 <script>YUI_config.groups.wireit.base = './build/';</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js" type="text/javascript"></script>
+<script src="./beautify.js" type="text/javascript"></script>
+<script>
+  var editor_count=0;
+  var editors={};
+  $(document).ready(function(){
+     var $tmp_form = $('#create_proc_form');
+     $.fn.serializeObject = function(){
+          var o = {};
+          var a = this.serializeArray();
+          $.each(a, function() {
+              if (o[this.name]) {
+                  if (!o[this.name].push) {
+                      o[this.name] = [o[this.name]];
+                  }
+                  o[this.name].push(this.value || '');
+              } else {
+                  o[this.name] = this.value || '';
+              }
+          });
+          return o;
+        };
+
+     $('#create_proc_form').submit(function(e){
+              /*$.post('./helpers/create_process.php', $tmp_form.serialize(), function(data){
+        });*/
+        console.log($('#create_proc_form').serializeObject());
+        var data=$('#create_proc_form').serializeObject();
+        data['func']=editor.getValue();
+        //console.log(data);
+        
+        e.preventDefault();
+        //alert(editor.getValue());
+        return false;
+    });
+     $('#update_proc_form').submit(function(e){
+       $.post('./helpers/update_process.php', $('#update_proc_form').serialize(), function(data){
+         //console.log(data);
+         var json=$.parseJSON(data);
+         //alert(json['properties']['script']['func']);
+         //var $div=$('<div></div>');
+         //$div.html(JSON.stringify(json, null, 4));
+         //$div.appendTo($('body'));
+         //alert(data);
+         var script=js_beautify(json['properties']['script']['func']);
+         console.log(script);
+         console.log(js_beautify(script));
+         $('<div id="editor'+editor_count+'" class="ui-editor"><div>').text(JSON.stringify(json,null,4)).appendTo($('#dynamic_update_proc_area')).wrap('<div class="ui-editor-wrapper"></div>');
+        var editor=editors[editor_count]=ace.edit("editor"+editor_count);
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/json");
+        console.log(editor.getValue());
+        editor_count++;
+         $('<div id="editor'+editor_count+'" class="ui-editor"><div>').text(script).appendTo($('#dynamic_update_proc_area')).wrap('<div class="ui-editor-wrapper"></div>');
+        var editor=editors[editor_count]=ace.edit("editor"+editor_count);
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/javascript");
+        console.log(editor.getValue());
+        alert(editor.getValue());
+        editor_count++;
+        //console.log(json);
+        //console.log(typeof(data));
+       },"json");
+       return false;
+     });
+  });
+</script>
 <style>
+    #editor { 
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+    .ui-editor {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+
+    }
+    .ui-editor-wrapper{
+      position:relative;
+      max-width:100%;
+      /*width: 400px;*/
+      height: 200px;
+    }
 </style>
 </head>
 <body>
@@ -14,7 +102,7 @@
 <input id="parent" type="text" name="parent" placeholder=""></input>
 <label for="new_stream">New Resource</label>
 <input id="new_stream"type="text" name="new_stream" placeholder="Relative Path to stream"></input>
-<button value="Create Process" name="Create Process">Create Resource</button>
+<button value="Create Resource" name="Create Resource">Create Resource</button>
 </form>
 <form method="post" action="./helpers/stop_process.php">
 <label for="stop">Stop Stream</label>
@@ -22,15 +110,68 @@
 </input>
 <button value="Destroy Process" name="Destroy Process">Destroy Process</button>
 </form>
-<form method="post" action="./helpers/update_process.php">
+<form id="update_proc_form" method="post" action="./helpers/update_process.php">
 <label for="update_proc">Update Process</label>
-<input id="update_proc" name="update_proc" placeholder="proc name"></input>
+<!--<input id="update_proc" name="update_proc" placeholder="proc name"></input>-->
+<select name="update_proc">
+<?php 
+require_once('config.php');
+require_once('sfslib.php');
+require_once('constants.php');
+$sfs = new SFSConnection();
+$sfs->setStreamFSInfo(CUR_HOST,8080);
+
+global $host, $port;
+
+$url = "http://$host:$port/proc";
+$proc_arr=json_decode(get($url),true);
+foreach($proc_arr['children'] as $key=>$value){
+?>
+  <option><?php echo $value ?></option>
+<?php
+}
+?>
+</select>
+<button value="Load Process">Load Process</button>
+<div id="dynamic_update_proc_area"><!--loaded with js data--></div>
 <button value="Update Process" name="Update Process">Update Process</button>
 </form>
+<form id="create_proc_form"style="position:relative;"method="post" action="./helpers/create_process.php">
+<label for="create_proc">Create Process</label>
+<input id="create_proc" name="create_proc" placeholder="proc name"></input>
+<fieldset>
+  <legend>Script</legend>
+  <label for="winsize">winsize</label>
+  <input id="winsize" name="winsize" placeholder="10"></input>
+  <label for="materialize">materialize</label>
+  <select id="materialize" name="materialize">
+    <option value="true">True</option>
+    <option value="false">False</option>
+  <select></br>
+  <label for="editor">Function</label>
+  <div style="position:relative;width:100%; min-height:200px;">
+  <div id="editor">function foo(items) {
+      var x = "All this is syntax highlighted";
+      return x;
+  }</div>
+  </div>
+      
+  
+</fieldset>
+<button value="Create Process" name="Create Process">Create Process</button>
+</form>
+
 </div>
+<script src="https://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    $(document).ready(function(){
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.getSession().setMode("ace/mode/javascript");
+    });
+</script>
+
 <?php
-  require_once("sfslib.php");
-  require_once("helpers/create_stream.php");
   //keep a reference to sub object
   //encapsulate host and port
   function isSourcePath($path=null,$sfs_obj=null){
