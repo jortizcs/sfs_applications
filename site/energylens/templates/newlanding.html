@@ -1,0 +1,32 @@
+{% extends 'base.html'%}
+{% block primary %}
+<section id="left_section">
+ 
+    <p id="tagline">Track Your Energy.</p>
+    <div id="gplay_btn"> </div>
+    <div style="clear:both"></div>
+    <img style="margin:0 auto; display:block;" src="{% static "./img/counting.png" %}" alt="Steps"/>
+    <article>
+      <h2>Tag</h2>
+      <p>
+      <a href="#">Generate QR Codes</a> to place on your personal items. Tagging items allows you to create a virtual representation of your device that enables the coupling of virtual services on your devices, such as the device energy viewer or the personal energy view or control it remotely with the remote control app.
+      </p>
+     </article>
+    <article>
+      <h2>Register</h2>
+      <p><a href="#">Register</a> your tagged items using the Android-based mobile application. Using the mobile application you can register your item, input information about the item and attach virtual services on it as well. Make sure to set the deployment configuration on the phone before getting started.
+      </p>
+    </article>
+    <article>
+      <h2>Swipe</h2>
+      <p>
+      Swipe the QR codes in the world arond you! By <a href="#">swiping QR codes</a> in the physical world, you can pull up the virtual services assocaited with that item. If an item moves, make sure to re-swipe the item in the new location, that way we can provide you with context-aware virtual services.
+      </p>
+      </article>
+  </section>
+  <section id="right_section">
+    <div id="nexus_one">
+    <div id="play_btn" title="Click me"></div>
+    </div>
+  </section>
+{% endblock %}

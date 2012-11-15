@@ -1,0 +1,10 @@
+{
+    "deployment":"NOKIA_BERKELEY",
+    "host":"http://is4server.com:8082",
+    "root":"/",
+    "homepath":"/buildings/nokia_berkeley";
+    "qrchome":"/buildings/nokia_berkeley/qrc",
+    "taxhome":"/taxonomies/ma2",
+    "spaceshome":"/buildings/nokia_berkeley/spaces",
+    "invhome":"/buildings/nokia_berkeley/inventory"
+}

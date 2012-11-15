@@ -1,9 +1,9 @@
 
 ##Development server
-* [ec2-204-236-167-113.us-west-1.compute.amazonaws.com](http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com/energylens)  
+* [ec2-204-236-167-113.us-west-1.compute.amazonaws.com](http://ec2-204-236-167-113.us-west-1.compute.amazonaws.com)  
 
 ###Login instructions  
-        `ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com`  
+        ssh -i /path/to/privkey [username]@ec2-204-236-167-113.us-west-1.compute.amazonaws.com  
 
 ###Wikis
 [TOC](https://github.com/jortizcs/sfs_applications/wiki)  
@@ -14,9 +14,20 @@
 [About Markdown](http://en.wikipedia.org/wiki/Markdown)  
 [Markdown Syntax](http://daringfireball.net/projects/markdown/syntax)
 
+###WireIt Grapher
+* [WireIt](https://github.com/neyric/wireit)
+* [More API Docs](http://dev.lshift.net/james/wireit/wireit/guide.html)
+
+###Restarting the server  
+        apachectl restart
+
+###Getting php and django to coexist
+* Look at httpd.conf in /etc/apache2
+
 ***
 
-#EnergyLens site plan by page**
+
+#EnergyLens site plan by page
 
 * Link-header batch
 * Link to landing page

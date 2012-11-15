@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html class="no-js">
+  <head>
+    <title>Energy Lens</title>
+    <link href="{% static "style2.css" %}" rel="stylesheet" type="text/css">
+    <link href="{% static "print.css"  %}" media="print" rel="stylesheet" type="text/css">
+    <link href="{% static "css/phone.css" %}"  media="screen and (min-width:300px) and (max-width: 1052px)" rel="stylesheet" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" text="javascript/css"></script>
+    <!--ie html5 elements -->
+    <!--[if lt IE 9]>
+    <script src="{% static "js/html5shiv.js" %}" type="text/javscscript"></script>
+    <![endif]-->
+    <!--css3/html5 feature detection-->
+    <script src="{% static "js/modernizr.custom.js" %}" type="text/javascript">
+    </script>
+    <script>
+        $(document).ready(function(){
+          var open=false;
+          $("#creative-credits").click(function(){
+            $("#overlay").fadeIn();
+            $("#cred_dialog").fadeToggle(function() {
+            
+              var $cl = $(this).children('.clothes');
+              
+              $cl.off('click');
+              $cl.click(function(){
+                   $('#overlay').click();
+                  /* $(this).parent().fadeOut();*/
+                   
+              })
+            
+            });
+          });
+          $("#overlay").click(function() {
+             $("#cred_dialog").fadeOut(function() {
+               $('#overlay').fadeOut();
+              });
+          });
+        });
+       
+    </script>
+  </head>
+  <body>
+  <aside id="masthead_bg"></aside>
+  <div id="wrap" class="clearfix">
+   <header id="masthead">
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="/grapher">Grapher</a></li>
+        <li><a href="/qrcgen">QRC Generator</a></li>
+        <li><a href="/download">Download</a>  </li>
+      </ul>
+    </nav>
+    <a href="/"><h1 id="logo_text" style="
+    font-size: 2em;
+    line-height: 100px;
+    display: inline;
+    color: white;
+    font-weight: 500;">Energy Lens</h1></a>
+  </header>
+  <section id="main">
+  {% block primary %}
+  {% endblock %}
+ </section><!--end main-->
+  <div style="clear:both"></div>
+   </div><!--end wrap-->
+   <footer>
+     <div id="footer_line">
+      <p id="copyright">Energy Lens &copy;2012</p>
+      <ul>
+        <li> <a href="#">About </a></li>
+        <li> | <a href="#">Site Policy </a></li>
+        <li> | <a id="creative-credits" href="#">Creative Credits</a></li>
+
+      </ul>
+      <p id="powered_by">powered by <a href="http://streamfs.cs.berkeley.edu"><img src="{% static "./img/streamfs2.png" %}" alt="Streamfs"/></a></p>
+      <div style="clear:both"></div>
+      </div><!--end footer line-->
+    </footer>
+    <div id="cred_dialog"/> 
+    <span class="clothes">&times;</span>
+    <h3>Creative Credits</h3>
+    <ul>
+    <li>Century Gothic fontstack from <a href="http://cssfontstack.com/">cssfontstack.com</a></li>
+    <li>3px tile from <a href="http://subtlepatterns.com/3px-tile/">subtlepatterns.com</a> by <a href="http://gre3g.livejournal.com/">Gre3g</a> <div xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/" about="http://subtlepatterns.com/3px-tile/"><span property="dct:title">Subtle Patterns</span> (<a rel="cc:attributionURL" property="cc:attributionName" href="http://subtlepatterns.com">Subtle Patterns</a>) / <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a></div></li>
+    <li>Android Ice Cream Sandwich UI <a href="http://actionbar.posterous.com/freebie-psd-android-40-ice-cream-sandwich-ui">actionbar.posterous.com</a></li>
+    </div>
+    <div id="overlay">
+    </div>
+  </body>
+
+</html>

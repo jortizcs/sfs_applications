@@ -1,0 +1,10 @@
+{
+    "deployment":"DEMO",
+    "host":"http://is4server.com:8084",
+    "root":"/",
+    "homepath":"/buildings/home";
+    "qrchome":"/buildings/home/qrc",
+    "taxhome":"/taxonomies/ma2",
+    "spaceshome":"/buildings/home/spaces",
+    "invhome":"/buildings/home/inventory"
+}

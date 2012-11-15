@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block primary %}
+<h1>Available Graphs</h1>
+<h3>Development</h3>
+<ul>
+	{% for graph in dev %}
+	<li><a href= "grapher/development{{ graph }}" >{{ graph }} </a></li>
+	{% endfor %}
+</ul>
+<h3>Production</h3>
+<ul>
+	{% for graph in pro %}
+	<li><a href= "grapher/production{{ graph }}" >{{ graph }} </a></li>
+	{% endfor %}
+</ul>
+<p> This page shows the graphs of subscription on streamfs server (ec2-184) that has a target to graphite server (ec2-204-236-167-113.us-west-1.compute.amazonaws.com:1338).</p>
+{% endblock %}
