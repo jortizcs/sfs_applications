@@ -1,4 +1,5 @@
 <?php
+  require_once('../header_text_plain.php');
   require_once('../sfslib.php');
   require_once('../curl_ops.php');
   require_once('../constants.php');

@@ -6,96 +6,11 @@
 <script>YUI_config.groups.wireit.base = './build/';</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js" type="text/javascript"></script>
 <script src="./beautify.js" type="text/javascript"></script>
-<script>
-  var editor_count=0;
-  var editors={};
-  $(document).ready(function(){
-     var $tmp_form = $('#create_proc_form');
-     $.fn.serializeObject = function(){
-          var o = {};
-          var a = this.serializeArray();
-          $.each(a, function() {
-              if (o[this.name]) {
-                  if (!o[this.name].push) {
-                      o[this.name] = [o[this.name]];
-                  }
-                  o[this.name].push(this.value || '');
-              } else {
-                  o[this.name] = this.value || '';
-              }
-          });
-          return o;
-        };
-
-     $('#create_proc_form').submit(function(e){
-              /*$.post('./helpers/create_process.php', $tmp_form.serialize(), function(data){
-        });*/
-        console.log($('#create_proc_form').serializeObject());
-        var data=$('#create_proc_form').serializeObject();
-        data['func']=editor.getValue();
-        //console.log(data);
-        
-        e.preventDefault();
-        //alert(editor.getValue());
-        return false;
-    });
-     $('#update_proc_form').submit(function(e){
-       $.post('./helpers/update_process.php', $('#update_proc_form').serialize(), function(data){
-         //console.log(data);
-         var json=$.parseJSON(data);
-         //alert(json['properties']['script']['func']);
-         //var $div=$('<div></div>');
-         //$div.html(JSON.stringify(json, null, 4));
-         //$div.appendTo($('body'));
-         //alert(data);
-         var script=js_beautify(json['properties']['script']['func']);
-         console.log(script);
-         console.log(js_beautify(script));
-         $('<div id="editor'+editor_count+'" class="ui-editor"><div>').text(JSON.stringify(json,null,4)).appendTo($('#dynamic_update_proc_area')).wrap('<div class="ui-editor-wrapper"></div>');
-        var editor=editors[editor_count]=ace.edit("editor"+editor_count);
-        editor.setTheme("ace/theme/monokai");
-        editor.getSession().setMode("ace/mode/json");
-        console.log(editor.getValue());
-        editor_count++;
-         $('<div id="editor'+editor_count+'" class="ui-editor"><div>').text(script).appendTo($('#dynamic_update_proc_area')).wrap('<div class="ui-editor-wrapper"></div>');
-        var editor=editors[editor_count]=ace.edit("editor"+editor_count);
-        editor.setTheme("ace/theme/monokai");
-        editor.getSession().setMode("ace/mode/javascript");
-        console.log(editor.getValue());
-        alert(editor.getValue());
-        editor_count++;
-        //console.log(json);
-        //console.log(typeof(data));
-       },"json");
-       return false;
-     });
-  });
-</script>
-<style>
-    #editor { 
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
-    .ui-editor {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-
-    }
-    .ui-editor-wrapper{
-      position:relative;
-      max-width:100%;
-      /*width: 400px;*/
-      height: 200px;
-    }
-</style>
+<script src="./js/sfsapp.js"></script>
+<link rel="stylesheet" href="./css/sfsapp_style.css" type="text/css"/>
 </head>
 <body>
+<div id="ui-message-bar" class="js-message-bar"></div>
 <div>
 <form method="post" action="./helpers/create_stream.php">
 <label for="parent">Parent(Leave blank top level)</label>
@@ -132,7 +47,7 @@ foreach($proc_arr['children'] as $key=>$value){
 }
 ?>
 </select>
-<button value="Load Process">Load Process</button>
+<button id="btn-load-proc" value="Load Process">Load Process</button>
 <div id="dynamic_update_proc_area"><!--loaded with js data--></div>
 <button value="Update Process" name="Update Process">Update Process</button>
 </form>
@@ -147,18 +62,28 @@ foreach($proc_arr['children'] as $key=>$value){
   <select id="materialize" name="materialize">
     <option value="true">True</option>
     <option value="false">False</option>
-  <select></br>
+  <select>  
+  <label for="timeout">Timeout(ms)</label>
+  <input type="text" name="timeout" id="timeout" placeholder="20000"></input>
+  </br>
   <label for="editor">Function</label>
   <div style="position:relative;width:100%; min-height:200px;">
-  <div id="editor">function foo(items) {
-      var x = "All this is syntax highlighted";
-      return x;
+  <div id="editor" class="ui-editor js-editor">function foo(buffer,state) {
+      var outObj = new Object();
+      outObj.tag = "processed";
+      return outObj;
   }</div>
   </div>
       
-  
 </fieldset>
 <button value="Create Process" name="Create Process">Create Process</button>
+</form>
+<form id = "create_subscription" method="Post" action="./helpers/create_subscription.php">
+<label for="path"> Path </label>
+<input name="path"placeholder=" /temp/stream1" id="path" type="text"></input>
+<label for="target">Target</label>
+<input name="target"placeholder="/temp/stream2" id="path" type="text"></input>
+<button>Create Subscription</button>
 </form>
 
 </div>
@@ -271,7 +196,7 @@ EOD;
   $json= get("ec2-184-169-204-224.us-west-1.compute.amazonaws.com:8080");
   #read all subs to build nodes and destination
   //$json=get("energylens.sfsprod.is4server.com:8080/sub/8-18289");
-  $node=json_decode($json, true);
+  /*$node=json_decode($json, true);
   //var_dump($node);
   $srcArr=$node["sourcePaths"];
   $dest=$node["destination"];
@@ -284,7 +209,7 @@ EOD;
   }
   if(isset($_GET['graph'])){
     echo getAllStreams(); 
-  }
+  }*/
 ?>
 
 <!--<div style="position: relative; width: 300px; height: 200px;" id="layer"></div>-->

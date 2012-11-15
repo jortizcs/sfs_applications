@@ -1,4 +1,5 @@
 <?php
+  require_once('../header_text_plain.php');
   require_once('../sfslib.php');
   require_once('../curl_ops.php');
   require_once('../constants.php');
@@ -17,13 +18,14 @@
       $response=$sfs->destroyResource($path);
       echo $response;
       if($response){
-        echo "response";
+        echo json_encode($response);
+
       }else{
         //response is empty even though successful deletion
-        echo "what";
+        echo json_encode(array("status"=>"success","message"=>"$path removed"));
       }
     } else {
-      echo "path does not exist";
+      echo json_encode(array("status"=>"success","errors"=>"$path does not exist"));
       return False;
     }
   }
