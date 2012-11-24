@@ -1,0 +1,48 @@
+//change for other languages
+package mobile.context.msg;
+option java_outer_classname = "OpLogDumpMessageProto";
+
+message OpLogDumpMessage{
+    optional string client_id               =1;
+    repeated Operation oplog               =2;
+
+    enum Type {
+        DUMP           =1;
+        DUMP_REPLY     =2;
+    }
+
+    required Type type = 3;
+
+}
+
+message OpLogEntry{
+    required uint64 timestamp   = 1;
+    repeated Operation ops      = 2;
+    required string objname     = 3;
+}
+
+message Operation {
+    required Type type = 1 [default = GET];
+   
+    enum Type {
+        //put your own here
+        GET         =0;
+        PUT         =1;
+        POST        =2;
+        DELETE      =3;
+        MOVE        =4;
+
+        //acks
+        GET_OK      =5;
+        GET_FAIL    =6;
+        PUT_OK      =7;
+        PUT_FAIL    =8;
+        POST_OK     =9;
+        POST_FAIL   =10;
+        DELETE_OK   =11;
+        DELETE_FAIL =12;
+    }
+
+    //extra bytes to be processed by the application server with this operaiotn
+    optional bytes data = 2; 
+}
