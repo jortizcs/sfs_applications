@@ -1,6 +1,7 @@
 package sfs.apps.connaccess;
 
 import java.net.URL;
+import java.util.*;
 import java.util.List;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,8 +27,10 @@ public class WifiScanReceiver extends BroadcastReceiver {
 	private static SFSConnector sfsconn = null;
 	private static SharedPreferences bufferPref = null;
 	private static ConcurrentHashMap<String, String> pubidHashMap = null;
-	
+	private static boolean wifi_exp_path_setup = false;
+		
 	public static boolean isReporting= false;
+	private static ConcurrentHashMap<String, String> existingPaths = new ConcurrentHashMap<String, String>();
 
 	public WifiScanReceiver(ConnAccessSampler wifiSensorCtrl, String locationPath, SharedPreferences dataBufPref) {
 	    super();
@@ -42,7 +45,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 	    	if(port==-1)
 	    		port=80;
 	    	sfsconn = new SFSConnector(hostport.getHost(), hostport.getPort());
-	    	setupReporting();
+	    	//setupReporting();
 	    } catch(Exception e){
 	    	e.printStackTrace();
 	    }
@@ -76,6 +79,8 @@ public class WifiScanReceiver extends BroadcastReceiver {
 			Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "Scan Mode enabled; Recording");
 		    List<ScanResult> results = ConnAccessSampler.wifiMngr.getScanResults();
 		    isReporting = true;
+		    ConcurrentHashMap<String, JSONArray> pathToData = new ConcurrentHashMap<String, JSONArray>();
+		    JSONArray list = new JSONArray();
 		    for (ScanResult result : results) {
 		    	try {
 		    		JSONArray newStreamBuf = new JSONArray();
@@ -89,6 +94,87 @@ public class WifiScanReceiver extends BroadcastReceiver {
 		    		String stream_path = loc_path + "/wifi/" + ConnAccessSampler.localMacAddress + "/" + bssid;
 		    		Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "stream_path=" + stream_path);
 		    		
+		    		String pubid=null;
+		    		if(!pubidHashMap.containsKey(stream_path) && sfsconn.exists(stream_path)){
+	    				pubid = sfsconn.getPubId(stream_path);
+	    				if(pubid!=null){
+	    					pubidHashMap.put(stream_path, pubid);
+	    					Log.i("ADD_EVENT::", "[path=" + stream_path + ", pubid=" + pubid + "]");
+	    				}
+		    			
+		    			Log.i("ConnApp::" + WifiScanReceiver.class.toString(), stream_path + "::pubid=" + pubid);
+		    			if(pubid!=null){
+		    				 postIt(bssid, pubid, stream_path, newStreamBuf, datapt);
+		    			} else{
+		    				Log.i("MISSING_KEY_EVENT::", "[path=" + stream_path + ", pubid=" + pubid + "]");
+		    				Log.i("MISSING_KEY_EVENT::", pubidHashMap.toString());
+		    				Log.i("ERROR_EVENT::", "[path=" + stream_path + ", pubid=" + pubid + "]");
+		    				bufferIt(bssid, datapt);
+		    			}
+		    			
+		    			
+		    		} else {
+		    			pubid=pubidHashMap.get(stream_path);
+		    			if(pubid==null){
+			    			JSONArray tdata = null;
+		    				if(pathToData.containsKey(stream_path))
+		    					tdata = pathToData.get(stream_path);
+		    				else
+		    					tdata = new JSONArray();
+		    				
+		    				tdata.put(datapt);
+	    					pathToData.put(stream_path, tdata);
+		    			}
+		    		}
+		    	} catch(Exception e){
+		    		e.printStackTrace();
+		    	}
+		    }
+		    
+		    //create the new stream files and post the data from this scan to them.
+		    Iterator<String> allpaths = pathToData.keySet().iterator();
+		    while(allpaths.hasNext()){
+		    	String thispath = allpaths.next();
+			    //create and post all the data
+		    	JSONObject spec = new JSONObject();
+				spec.put("path", thispath);
+				spec.put("type", "stream");
+				JSONObject propsObj = new JSONObject();
+				propsObj.put("units", "dBm");
+				spec.put("properties", propsObj);
+				spec.put("data", pathToData.get(thispath));
+				list.put(spec);
+		    }
+		    setupBulkReporting(list, true);
+		}
+  	} catch(Exception e){
+  		e.printStackTrace();
+  	} finally {
+  		isReporting=false;
+  	}
+  }
+  
+  //@Override
+  public void onReceive2(Context c, Intent intent) {
+  	try {
+  		long now = System.currentTimeMillis();
+  		long ts = (now-ConnAccessSampler.localReftime)+ ConnAccessSampler.serverRefTime;
+  		if(ConnAccessSampler.scanModeEnabled){
+			Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "Scan Mode enabled; Recording");
+		    List<ScanResult> results = ConnAccessSampler.wifiMngr.getScanResults();
+		    isReporting = true;
+		    for (ScanResult result : results) {
+		    	try {
+		    		JSONArray newStreamBuf = new JSONArray();
+		    		JSONObject datapt = new JSONObject();
+		    		datapt.put("ts", ts);
+		    		datapt.put("value", result.level);
+		    		Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "checking: " + 
+		    				GlobalConstants.HOST + loc_path);
+		    		String bssid = result.BSSID.replaceAll(":", "_");
+		    		Log.i("ConnApp::" + "ConnApp::" + WifiScanReceiver.class.toString(), bssid + "::" + datapt.toString());
+		    		String stream_path = loc_path + "/wifi/" + ConnAccessSampler.localMacAddress + "/" + bssid;
+		    		Log.i("ConnApp::" + WifiScanReceiver.class.toString(), "stream_path=" + stream_path);
 		    		
 		    		if(sfsconn.exists(stream_path)){
 		    			String pubid=null;
@@ -113,12 +199,12 @@ public class WifiScanReceiver extends BroadcastReceiver {
 		    				bufferIt(bssid, datapt);
 		    			}
 		    		} else {
-		    			Log.i("ConnApp::", "Create resource::[parent=" + Util.getParent(stream_path) + 
+		    			Log.i("ConnApp.onReceive.create::", "Create resource::[parent=" + Util.getParent(stream_path) + 
 		    					",filename=" + bssid + ",type=default]");
 
 						//create create a stream for this access point in the result set in the folder for this phone
 						sfsconn.mkrsrc(Util.getParent(stream_path), bssid,  "stream");
-						Log.i("ConnApp::","Creating stream file" + stream_path);
+						Log.i("ConnApp.onReceive.create::","Creating stream file" + stream_path);
 						JSONObject propsObj = new JSONObject();
 	    				propsObj.put("units", "dBm");
 	    				sfsconn.overwriteProps(stream_path, propsObj.toString());
@@ -167,7 +253,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 						ConnAccessSampler.debugString+= thisDatapt.toString() + "->" + stream_path + "\n";
 					} else {
 						newStreamBuf.put(thisDatapt);
-						ConnAccessSampler.debugString+= thisDatapt.toString() + "->" + stream_path + "SAVED\n";
+						ConnAccessSampler.debugString+= thisDatapt.toString() + "->" + stream_path + " SAVED\n";
 					}
 				}
 		
@@ -178,7 +264,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 					ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "\n";
 				} else {
 					newStreamBuf.put(datapt);
-					ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + "SAVED\n";
+					ConnAccessSampler.debugString+= datapt.toString() + "->" + stream_path + " SAVED\n";
 				}
 			} else {  //not in local buffer, so just try to post it and create a local buffer if the server is down
 				boolean postOk=true;
@@ -234,7 +320,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
 	
 	private void setupReporting(){
 		try {
-			if(ConnAccessSampler.isConnectedToSfs){
+			if(ConnAccessSampler.isConnectedToSfs && !wifi_exp_path_setup){
 				if(sfsconn.exists(loc_path)){
 					//create wifi folder
 					if(!sfsconn.exists(loc_path+ "/wifi")){
@@ -247,6 +333,8 @@ public class WifiScanReceiver extends BroadcastReceiver {
 						JSONObject props = new JSONObject();
 	    				props.put("info", GlobalConstants.PHONE_INFO);
 						sfsconn.overwriteProps(loc_path + "/wifi/" + ConnAccessSampler.localMacAddress, props.toString());
+					} else if (sfsconn.exists(loc_path + "/wifi/" + ConnAccessSampler.localMacAddress)){
+						wifi_exp_path_setup = true;
 					}
 				} else{
 					sfsconn.mkrsrc(Util.getParent(loc_path), loc_path.substring(loc_path.lastIndexOf("/")+1,loc_path.length()), "default");
@@ -261,8 +349,52 @@ public class WifiScanReceiver extends BroadcastReceiver {
 						JSONObject props = new JSONObject();
 	    				props.put("info", GlobalConstants.PHONE_INFO);
 						sfsconn.overwriteProps(loc_path + "/wifi/" + ConnAccessSampler.localMacAddress, props.toString());
+					} else {
+						wifi_exp_path_setup = true;
 					}
 				}
+			}
+		} catch(Exception e){
+			Log.e("ConnApp::", "", e);
+		}
+	}
+	
+	private void setupBulkReporting(JSONArray list, boolean override){
+		try {
+			if(ConnAccessSampler.isConnectedToSfs && (!wifi_exp_path_setup || override)){
+				JSONObject props = new JSONObject();
+				props.put("info", GlobalConstants.PHONE_INFO);
+				
+				JSONObject spec = new JSONObject();
+				spec.put("path", loc_path + "/wifi/" + ConnAccessSampler.localMacAddress);
+				spec.put("type", "default");
+				spec.put("properties", props);
+				
+				list.put(spec);
+				
+				JSONObject responseObj = sfsconn.bulkResourceCreate("/", list);
+				if(responseObj!=null){
+					for(int i=0; i<list.length(); i++){
+						String testPath = Util.cleanPath(list.getString(i));
+						JSONObject thisResp = null;
+						try {
+							if(responseObj.has(testPath))
+								thisResp = responseObj.getJSONObject(testPath);
+							else if(responseObj.has(testPath+"/"))
+								thisResp = responseObj.getJSONObject(testPath+"/");
+							
+							if(thisResp!=null && thisResp.has("PubId")){
+								String pubid = thisResp.getString("PubId");
+								pubidHashMap.put(testPath, pubid);
+							}
+						} catch(Exception handleError){
+							Log.e("SETUP_EVENT_ERROR", "", handleError);
+						}
+					}
+					wifi_exp_path_setup = true;
+				}
+				
+				
 			}
 		} catch(Exception e){
 			Log.e("ConnApp::", "", e);

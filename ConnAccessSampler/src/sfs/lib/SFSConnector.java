@@ -1,6 +1,8 @@
 package sfs.lib;
 
 import java.net.*;
+import java.util.logging.Logger;
+
 import org.json.*;
 
 import sfs.apps.connaccess.GlobalConstants;
@@ -38,7 +40,7 @@ public class SFSConnector {
 		}
 	}
 	
-	public String mkrsrc(String path, String name, String type){
+	public boolean mkrsrc(String path, String name, String type){
 		try {
 			JSONObject request = new JSONObject();
 			if(type.equalsIgnoreCase("default")){
@@ -50,7 +52,53 @@ public class SFSConnector {
 				request.put("resourceName", name);
 			}
 			
-			return CurlOps.put(request.toString(),sfsurl.toString() + path);
+			int code= CurlOps.put(request.toString(),sfsurl.toString() + path);
+			if(code==201)
+				return true;
+			
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * {   
+	 *	    "operation":"create_resources",
+	 *	    "list":[
+	 *	            {
+	 *	                "path":"/temp/one/two/stream3", 
+	 *	                "type":"stream",
+	 *	                "data":[{"value":0, "ts":1347307033196},{"value":1, "ts":1347307033197},{"value":2, "ts":1347307033198},{"value":3, "ts":1347307033199}]
+	 *	            },
+	 *	            {
+	 *	                "path":"/temp/one/three/stream4", 
+	 *	                "type":"stream",
+	 *	                "data":[{"value":0, "ts":1347307033196},{"value":1, "ts":1347307033197},{"value":2, "ts":1347307033198},{"value":3, "ts":1347307033199}]
+	 *	            },
+	 *	            {
+	 *	                "path":"/temp/one_four/two/", 
+	 *					"properties":{"desc":"test instance"},
+	 *	                "type":"default"
+	 *	            }
+	 *	    ]
+	 *	}
+	 *
+	 * @param path Default file path to post the data to.
+	 * @param list List object with similar format as shown above.
+	 * @return true if successful, false otherwise.
+	 */
+	public JSONObject bulkResourceCreate(String path, JSONArray list){
+		JSONObject responseObj=null;
+		try{
+			JSONObject request = new JSONObject();
+			request.put("operation", "create_resources");
+			request.put("list", list);
+			responseObj = CurlOps.putAndGetResponse(request.toString(), sfsurl.toString()+ path);
+			Log.i("ConnApp::bulkResourceCreate", responseObj.toString());
+			if(responseObj.has("response_code") && responseObj.getInt("response_code")==201)
+				return 	new JSONObject(responseObj.get("body").toString());
+			return null;
 		} catch(Exception e){
 			e.printStackTrace();
 		}
@@ -66,7 +114,7 @@ public class SFSConnector {
 		return null;
 	}
 
-    public String mksymlink(String parentpath, String name, String links_to){
+    public boolean mksymlink(String parentpath, String name, String links_to){
         try {
         	JSONObject request = new JSONObject();
 	        request.put("operation", "create_symlink");
@@ -76,24 +124,14 @@ public class SFSConnector {
 	        else
 	            request.put("uri", links_to);
 
-			return CurlOps.put(request.toString(),sfsurl.toString() + parentpath);
+	        int code = CurlOps.put(request.toString(),sfsurl.toString() + parentpath);
+			if(code==201)
+				return true;
 		} catch(Exception e){
 			e.printStackTrace();
 		}
-		return null;
+		return false;
     }
-	
-	public  String mksmappub(String path, URL smapurl){
-		try{
-			JSONObject request = new JSONObject();
-			request.put("operation", "create_smap_publisher");
-			request.put("smap_urls", smapurl.toString());
-			return CurlOps.put(request.toString(),sfsurl.toString() + path);
-		} catch(Exception e){
-			e.printStackTrace();
-		}
-		return null;
-	}
 	
 	public String overwriteProps(String path, String propsStr){
 		try {

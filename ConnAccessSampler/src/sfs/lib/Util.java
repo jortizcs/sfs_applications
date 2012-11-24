@@ -64,7 +64,7 @@ public class Util {
 	}
 	  
 	
-	public static String createResource(String name, String type, String targetUrl) throws Exception, JSONException {
+	public String createResource(String name, String type, String targetUrl) throws Exception, JSONException {
 		JSONObject jsonObj = new JSONObject();
 		
 		if(type.equalsIgnoreCase("default")){
@@ -75,7 +75,9 @@ public class Util {
 			jsonObj.put("operation", "create_generic_publisher");
 			jsonObj.put("resourceName", name);
 		}
-		return CurlOps.put(jsonObj.toString(), targetUrl);
+		if(CurlOps.put(jsonObj.toString(), targetUrl)==201)
+			return "OK";
+		return "ERROR";
 	}
 	
 	//hostAndPort = "http://is4server.com:8083"
@@ -90,7 +92,9 @@ public class Util {
 		jsonObj.put("name", target.substring(i+1));
 		jsonObj.put("uri", target);
 		Log.i(Util.class.toString(), "Sending Request:: " + jsonObj.toString());
-		return CurlOps.put(jsonObj.toString(), hostAndPort + origin);
+		if(CurlOps.put(jsonObj.toString(), hostAndPort + origin)==201)
+			return "OK";
+		return "ERROR";
 	}
 	
 	public static String getUriFromQrc(String qrc) throws Exception {

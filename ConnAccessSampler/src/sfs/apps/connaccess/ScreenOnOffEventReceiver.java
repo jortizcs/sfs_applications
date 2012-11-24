@@ -40,7 +40,8 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 		    	if(pubidHashMap==null)
 		    		pubidHashMap = new ConcurrentHashMap<String,String>();
 		    	
-		    	setupReporting();
+		    	//setupReporting();
+		    	setupBulkReporting(null, false);
 			}
 	    } catch(Exception e){
 			Log.e("ConnApp::", "", e);
@@ -173,6 +174,51 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 		}
 	}
 	
+	private void setupBulkReporting(JSONArray list, boolean override){
+		try {
+			if(ConnAccessSampler.isConnectedToSfs && (!exp_paths_set || override)){
+				JSONObject props = new JSONObject();
+				props.put("info", GlobalConstants.PHONE_INFO);
+				
+				JSONObject spec = new JSONObject();
+				spec.put("path", loc_path + "/screen_state/" + ConnAccessSampler.localMacAddress);
+				spec.put("type", "default");
+				spec.put("properties", props);
+				
+				JSONObject spec2 = new JSONObject();
+				spec2.put("path", loc_path+"/screen_state/" + ConnAccessSampler.localMacAddress + "/onoff_stream");
+				spec2.put("type", "stream");
+				
+				list.put(spec);
+				list.put(spec2);
+				
+				JSONObject responseObj = sfs_server.bulkResourceCreate("/", list);
+				if(responseObj!=null){
+					for(int i=0; i<list.length(); i++){
+						String testPath = Util.cleanPath(list.getString(i));
+						JSONObject thisResp = null;
+						try {
+							if(responseObj.has(testPath))
+								thisResp = responseObj.getJSONObject(testPath);
+							else if(responseObj.has(testPath+"/"))
+								thisResp = responseObj.getJSONObject(testPath+"/");
+							
+							if(thisResp!=null && thisResp.has("PubId")){
+								String pubid = thisResp.getString("PubId");
+								pubidHashMap.put(testPath, pubid);
+							}
+						} catch(Exception handleError){
+							Log.e("SETUP_EVENT_ERROR", "", handleError);
+						}
+					}
+					exp_paths_set = true;
+				}
+			}
+		} catch(Exception e){
+			Log.e("ConnApp::", "", e);
+		}
+	}
+	
 	private void setupReporting(){
 		Log.i("FUNCTION_CALL_EVENT", "ScanSetTask.setupReporting() called!");
 		try {
@@ -196,7 +242,6 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 	    				props.put("info", GlobalConstants.PHONE_INFO);
 	    				sfs_server.overwriteProps(loc_path+"/screen_state/"+ ConnAccessSampler.localMacAddress, props.toString());
 						if(sfs_server.exists(loc_path+"/screen_state/"+ ConnAccessSampler.localMacAddress)){
-							exp_paths_set=true;
 							Log.i("SETUP_EVENT", "4");
 							sfs_server.mkrsrc(loc_path+"/screen_state/" + ConnAccessSampler.localMacAddress ,"onoff_stream", "stream");
 						}
@@ -206,6 +251,8 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 					if(!sfs_server.exists(loc_path+"/screen_state/" + ConnAccessSampler.localMacAddress + "/onoff_stream")){
 						sfs_server.mkrsrc(loc_path+"/screen_state/" + ConnAccessSampler.localMacAddress ,"onoff_stream", "stream");
 						Log.i("SETUP_EVENT", "4a");
+					} else {
+						exp_paths_set=true;
 					}
 				} else{
 					sfs_server.mkrsrc(Util.getParent(loc_path), loc_path.substring(loc_path.lastIndexOf("/")+1,loc_path.length()), "default");
@@ -217,13 +264,16 @@ public class ScreenOnOffEventReceiver extends BroadcastReceiver {
 					}
 					
 					//create folder for this phone in the screen_state folder
+					boolean e = sfs_server.exists(loc_path + "/screen_state/" + ConnAccessSampler.localMacAddress);
 					if(sfs_server.exists(loc_path+ "/screen_state") && 
-							!sfs_server.exists(loc_path + "/screen_state/" + ConnAccessSampler.localMacAddress)){
+							!e){
 						Log.i("SETUP_EVENT", "7");
 						sfs_server.mkrsrc(loc_path+"/screen_state", ConnAccessSampler.localMacAddress, "default");
 						JSONObject props = new JSONObject();
 	    				props.put("info", GlobalConstants.PHONE_INFO);
 	    				sfs_server.overwriteProps(loc_path, props.toString());
+					} else if(e){
+						exp_paths_set=true;
 					}
 				}
 			} else {

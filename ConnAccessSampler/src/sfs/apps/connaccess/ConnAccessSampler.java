@@ -1,6 +1,7 @@
 package sfs.apps.connaccess;
 
 import java.net.URL;
+import java.util.*;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,6 +44,7 @@ public class ConnAccessSampler extends Activity {
 	protected static Timer timer = null;
 	protected static String currLocString =null;
 	protected static String localMacAddress = null;
+	private static boolean exp_paths_set = false;
 	
 	
 	private static SharedPreferences bufferPref = null;
@@ -176,7 +178,7 @@ public class ConnAccessSampler extends Activity {
     	
     	private String loc_path = null;
     	private SFSConnector sfsconn = null;
-    	private boolean exp_paths_set = false;
+    	
     	private String stream_path = null;
     	private View view = null;
     	
@@ -191,7 +193,7 @@ public class ConnAccessSampler extends Activity {
     			    pubidHashMap = new ConcurrentHashMap<String, String>();
     		    }
     			sfsconn=sfs_server;
-    	    	setupReporting();
+    	    	setupBulkReporting(new JSONArray(), false);
     	    } catch(Exception e){
     			Log.e("ERROR_EVENT::", "", e);
     	    }
@@ -378,7 +380,6 @@ public class ConnAccessSampler extends Activity {
 		    				props.put("info", GlobalConstants.PHONE_INFO);
 		    				sfs_server.overwriteProps(loc_path+"/conn_state/"+ ConnAccessSampler.localMacAddress, props.toString());
 							if(sfs_server.exists(loc_path+"/conn_state/"+ ConnAccessSampler.localMacAddress)){
-								exp_paths_set=true;
 								Log.i("SETUP_EVENT", "4");
 								sfs_server.mkrsrc(loc_path+"/conn_state/" + ConnAccessSampler.localMacAddress ,"conn_stream", "stream");
 							}
@@ -388,7 +389,10 @@ public class ConnAccessSampler extends Activity {
 						if(!sfs_server.exists(loc_path+"/conn_state/" + ConnAccessSampler.localMacAddress + "/conn_stream")){
 							sfs_server.mkrsrc(loc_path+"/conn_state/" + ConnAccessSampler.localMacAddress ,"conn_stream", "stream");
 							Log.i("SETUP_EVENT", "4a");
+						} else {
+							exp_paths_set=true;
 						}
+						
 					} else{
 						sfs_server.mkrsrc(Util.getParent(loc_path), loc_path.substring(loc_path.lastIndexOf("/")+1,loc_path.length()), "default");
 						//create conn_state folder
@@ -399,13 +403,16 @@ public class ConnAccessSampler extends Activity {
 						}
 						
 						//create folder for this phone in the conn_state folder
+						boolean e=sfs_server.exists(loc_path + "/conn_state/" + ConnAccessSampler.localMacAddress);
 						if(sfs_server.exists(loc_path+ "/conn_state") && 
-								!sfs_server.exists(loc_path + "/conn_state/" + ConnAccessSampler.localMacAddress)){
+								!e){
 							Log.i("SETUP_EVENT", "7");
 							sfs_server.mkrsrc(loc_path+"/conn_state", ConnAccessSampler.localMacAddress, "default");
 							JSONObject props = new JSONObject();
 		    				props.put("info", GlobalConstants.PHONE_INFO);
 		    				sfs_server.overwriteProps(loc_path+"/conn_state/"+ConnAccessSampler.localMacAddress, props.toString());
+						} else if(e){
+							exp_paths_set=true;
 						}
 					}
 				} else {
@@ -413,6 +420,54 @@ public class ConnAccessSampler extends Activity {
 				}
 			} catch(Exception e){
 				Log.e("SETUP_EVENT_ERROR", "", e);
+			}
+		}
+		
+		private void setupBulkReporting(JSONArray list, boolean override){
+			try {
+				if(ConnAccessSampler.isConnectedToSfs && (!exp_paths_set || override)){
+					JSONObject props = new JSONObject();
+					props.put("info", GlobalConstants.PHONE_INFO);
+					
+					JSONObject spec = new JSONObject();
+					spec.put("path", loc_path + "/conn_state/" + ConnAccessSampler.localMacAddress);
+					spec.put("type", "default");
+					spec.put("properties", props);
+					
+					JSONObject spec2 = new JSONObject();
+					spec2.put("path", loc_path+"/conn_state/" + ConnAccessSampler.localMacAddress + "/conn_stream");
+					spec2.put("type", "stream");
+					
+					list.put(spec);
+					list.put(spec2);
+					
+					JSONObject responseObj = sfs_server.bulkResourceCreate("/", list);
+					Log.i("ConnApp::","responseObj="+responseObj.toString());
+					if(responseObj!=null){
+						for(int i=0; i<list.length(); i++){
+							String testPath = Util.cleanPath(list.getString(i));
+							JSONObject thisResp = null;
+							try {
+								if(responseObj.has(testPath))
+									thisResp = responseObj.getJSONObject(testPath);
+								else if(responseObj.has(testPath+"/"))
+									thisResp = responseObj.getJSONObject(testPath+"/");
+								
+								if(thisResp!=null && thisResp.has("PubId")){
+									String pubid = thisResp.getString("PubId");
+									pubidHashMap.put(testPath, pubid);
+								}
+							} catch(Exception handleError){
+								Log.e("SETUP_EVENT_ERROR", "", handleError);
+							}
+						}
+						exp_paths_set = true;
+					}
+					
+					
+				}
+			} catch(Exception e){
+				Log.e("ConnApp::", "", e);
 			}
 		}
 		
