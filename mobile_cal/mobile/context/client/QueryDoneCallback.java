@@ -1,3 +1,5 @@
-public interface QueryDoneCallback{
-    public void queryDone(byte[] results);
+package mobile.context.client;
+
+public abstract class QueryDoneCallback{
+    public abstract void queryDone(byte[] results);
 }

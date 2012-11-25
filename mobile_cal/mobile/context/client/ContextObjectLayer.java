@@ -42,9 +42,10 @@ public abstract class ContextObjectLayer{
      *
      * @param objectName the name of the object.
      * @param callback called when the given object is read from the server and placed in the local cache.
-     * @return CallbackHandler allows you to check the state of the callback and cancel the request if necessary.
+     * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandler read(ObjectName objectName, ReadDoneCallback callback){
+    public CallbackHandle read(ObjectName objectName, ReadDoneCallback callback){
+        return null;
     }
 
     /**
@@ -85,9 +86,9 @@ public abstract class ContextObjectLayer{
      * @param objectName the name of the object.
      * @param op the operation to be applied to the ApplicationObject
      * @param callback called when the given object is read from the server and placed in the local cache.
-     * @return CallbackHandler allows you to check the state of the callback and cancel the request if necessary.
+     * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandler write(ObjectName objectName, byte[] data, Operation op, WriteDoneCallback callback){
+    public CallbackHandle write(ObjectName objectName, byte[] data, Operation op, WriteDoneCallback callback){
         return null;
     }
 
@@ -127,18 +128,11 @@ public abstract class ContextObjectLayer{
      *
      * @param e the Expression to be applied atomically.
      * @param callback called when the given object is read from the server and placed in the local cache.
-     * @return CallbackHandler allows you to check the state of the callback and cancel the request if necessary.
+     * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandler write(Expression e, WriteDoneCallback callback){
+    public CallbackHandle write(Expression e, WriteDoneCallback callback){
         return null;
     }
-
-    /**
-     * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 
-     * local cache.  Method should block until the query results return.
-     *
-     */
-    public abstract byte[] query(String... args);
 
     /**
      * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 

@@ -17,17 +17,21 @@ public abstract class Expression {
     }
 
     public Operation[] getOperations(){
+        return null;
     }
 
     public boolean containsOperation(Operation op, ObjectName name){
+        return true;
     }
 
     public void execute(){
     }
 
     public ApplicationObject execute(long freshness){
+        return null;
     }
 
-    public CallbackHandler execute(WriteDoneCallback callback){
+    public CallbackHandle execute(WriteDoneCallback callback){
+        return null;
     }
 }
