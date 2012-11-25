@@ -1,9 +1,10 @@
+package mobile.context.client;
 
 public abstract class CallbackHandler{
-    private ReadWriteTaskQueueElement queueElt = null;
-    private static ReadWriteScheduler scheduler = null;
+    private ReadWriteQueryTaskQueueElement queueElt = null;
+    private static ReadWriteQueryScheduler scheduler = null;
 
-    protected CallbackHandler(ReadWriteTaskQueueElement request, OpScheduler sched){
+    protected CallbackHandler(ReadWriteQueryTaskQueueElement request, ReadWriteQueryScheduler sched){
         queueElt = request;
         scheduler = sched;
     }
@@ -13,6 +14,6 @@ public abstract class CallbackHandler{
      * we return false, otherwise the job is unscheduled and true is returned.
      */
     public boolean cancel(){
-        return sched.unschedule(queueElt);    
+        return scheduler.cancel(queueElt);    
     }
 }

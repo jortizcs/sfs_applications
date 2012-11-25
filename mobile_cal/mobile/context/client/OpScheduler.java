@@ -1,11 +1,13 @@
-import java.util.concurrent.ConcurrentLinkedQueue;
+package mobile.context.client;
+
+import java.util.concurrent.*;
 
 public class OpScheduler{
     public OpScheduler thisScheduler = null;
-    private static ConcurrentLinkedQueue<ReadWriteTaskQueueElement> queue = null;
+    private static ConcurrentLinkedQueue<ReadWriteQueryTaskQueueElement> queue = null;
 
     private OpScheduler(){
-        queue = new ConcurrentLinkedQueue<ReadWriteTaskQueueElement>();
+        queue = new ConcurrentLinkedQueue<ReadWriteQueryTaskQueueElement>();
     }
 
     public OpScheduler getInstance(){

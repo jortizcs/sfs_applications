@@ -1,3 +1,7 @@
+package mobile.context.client;
+
+import mobile.context.app.*;
+
 public abstract class ContextObjectLayer{
 
     /**
@@ -128,6 +132,32 @@ public abstract class ContextObjectLayer{
     public CallbackHandler write(Expression e, WriteDoneCallback callback){
         return null;
     }
+
+    /**
+     * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 
+     * local cache.  Method should block until the query results return.
+     *
+     */
+    public abstract byte[] query(String... args);
+
+    /**
+     * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 
+     * local cache.  Method should block until the query results return.
+     *
+     */
+    public abstract byte[] query(String[] args);
+
+    /**
+     * Send a query to the application server if and only if we have been disconnected > freshness millisecond ago.    
+     * If the server is, unavailable, null is returned.  Otherwise the query is answered locally.
+     *
+     */
+    public abstract byte[] query(String[] args, long freshness);
+
+    /**
+     * Sends a query to the application server.
+     */
+    public abstract void query(String[] args, QueryDoneCallback callback);
 
     /**
      * Returns the current connection state (network access bit).

@@ -1,3 +1,7 @@
+package mobile.context.client;
+
+import mobile.context.app.*;
+
 public interface Operation {
     
     /**
