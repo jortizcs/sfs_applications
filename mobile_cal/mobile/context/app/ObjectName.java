@@ -1,3 +1,5 @@
+package mobile.context.app;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
