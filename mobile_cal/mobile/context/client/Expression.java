@@ -7,13 +7,13 @@ import  mobile.context.app.*;
  * if the server supports it.  The expression is evaluated in array-input order.
  */
 public abstract class Expression {
-    public Expression(ObjectName[] objectNames, byte[][] data, Operation[] op){
+    public Expression(ObjectName[][] objectNames, byte[][] data, Operation[] op){
     }
 
-    public void addOperation(ObjectName name, byte[] data, Operation op){
+    public void addOperation(ObjectName[] name, byte[] data, Operation op){
     }
 
-    public void removeOperation(ObjectName name, Operation op){
+    public void removeOperation(ObjectName[] name, Operation op){
     }
 
     public Operation[] getOperations(){

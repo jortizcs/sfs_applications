@@ -58,7 +58,7 @@ public abstract class ContextObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject write(ObjectName objectName, byte[] data, Operation op){
+    public ApplicationObject write(ObjectName[] objectName, byte[] data, Operation op){
         return null;
     }
 
@@ -75,7 +75,7 @@ public abstract class ContextObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject write(ObjectName objectName, byte[] data, Operation op, long freshness){
+    public ApplicationObject write(ObjectName[] objectName, byte[] data, Operation op, long freshness){
         return null;
     }
 
@@ -88,7 +88,7 @@ public abstract class ContextObjectLayer{
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandle write(ObjectName objectName, byte[] data, Operation op, WriteDoneCallback callback){
+    public CallbackHandle write(ObjectName[] objectName, byte[] data, Operation op, WriteDoneCallback callback){
         return null;
     }
 
@@ -139,19 +139,19 @@ public abstract class ContextObjectLayer{
      * local cache.  Method should block until the query results return.
      *
      */
-    public abstract byte[] query(String[] args);
+    public abstract byte[] query(String queryString);
 
     /**
      * Send a query to the application server if and only if we have been disconnected > freshness millisecond ago.    
      * If the server is, unavailable, null is returned.  Otherwise the query is answered locally.
      *
      */
-    public abstract byte[] query(String[] args, long freshness);
+    public abstract byte[] query(String queryString, long freshness);
 
     /**
      * Sends a query to the application server.
      */
-    public abstract void query(String[] args, QueryDoneCallback callback);
+    public abstract void query(String queryString, QueryDoneCallback callback);
 
     /**
      * Returns the current connection state (network access bit).

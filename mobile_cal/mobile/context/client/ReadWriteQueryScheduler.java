@@ -12,7 +12,7 @@ public class ReadWriteQueryScheduler{
     private static ExecutorService executorService = null;
 
     enum CallbackType {
-        READ,WRITE,QUERY
+        READ,WRITE,WRITE_EXPRESSION,QUERY
     }
 
     private ReadWriteQueryScheduler(ApplicationServer s){
@@ -30,7 +30,7 @@ public class ReadWriteQueryScheduler{
         return true;
     }
 
-    public synchronized CallbackHandle schedule(Operation op, ReadDoneCallback callback){
+    public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback){
         try {
             RWQTask task = new RWQTask(op, callback);
             Future<?> future = executorService.submit(task);
@@ -50,9 +50,19 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
-    public synchronized CallbackHandle schedule(Operation op, QueryDoneCallback callback){
+    public synchronized CallbackHandle schedule(String query, QueryDoneCallback callback){
         try {
             RWQTask task = new RWQTask(op, callback);
+            Future<?> future = executorService.submit(task);
+            CallbackHandle h = new CallbackHandle(future);
+            return h;
+        } catch(Exception e){}
+        return null;
+    }
+
+    public synchronized CallbackHandle schedule(Expression exp, QueryDoneCallback callback){
+        try {
+            RWQTask task = new RWQTask(expression, callback);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -63,6 +73,7 @@ public class ReadWriteQueryScheduler{
     public class RWQTask implements Runnable{
 
         public Operation operation = null;
+        public Expression exp = null;
         public ReadDoneCallback readCallback = null;
         public WriteDoneCallback writeCallback = null;
         public QueryDoneCallback queryCallback = null;
@@ -78,6 +89,12 @@ public class ReadWriteQueryScheduler{
         public RWQTask(Operation op, WriteDoneCallback callback){
             callbackType = CallbackType.WRITE;
             operation = op;
+            writeCallback = callback;
+        }
+
+        public RWQTask(Expression expression, WriteDoneCallback callback){
+            callbackType = CallbackType.WRITE_EXPRESSION;
+            exp = expression;
             writeCallback = callback;
         }
 
@@ -98,7 +115,10 @@ public class ReadWriteQueryScheduler{
                     readCallback.readDone(server.doRead(operation));
                     break;
                 case WRITE:
-                    writeCallback.writeDone(server.doRead(operation));
+                    writeCallback.writeDone(server.doWrite(operation));
+                    break;
+                case WRITE_EXPRESSION:
+                    writeCallback.writeDone(server.doWrite(exp));
                     break;
                 case QUERY:
                     queryCallback.queryDone(server.doQuery(operation));
