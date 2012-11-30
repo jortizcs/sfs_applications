@@ -9,5 +9,5 @@ public interface ApplicationServer{
 
     public ApplicationObject[] doWriteExpession(Expression exp);
 
-    public byte[] doQuery(String queryStrin);
+    public byte[] doQuery(String queryString);
 }

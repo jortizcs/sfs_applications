@@ -20,6 +20,10 @@ public interface Operation {
      */
     public int getOperator();
 
+    public ObjectName[] getObjectParams();
+
+    public byte[] getData();
+
 
     /**
      * Executes the operation.  Tries to execute the operation on server first.  If server is not
