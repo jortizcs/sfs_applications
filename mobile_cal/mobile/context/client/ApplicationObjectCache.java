@@ -97,6 +97,7 @@ public class ApplicationObjectCache {
                 o= l.get(0);
                 l.remove(0);
                 cacheMap.remove(o);
+                nameCacheMap.remove(o.getName());
                 totalRemoved += o.getBytes().length+4;
                 cacheSize -= totalRemoved;
                 if(l.size()==0)
@@ -106,14 +107,21 @@ public class ApplicationObjectCache {
             }
             list.remove(0);
         }
-
     }
 
     public boolean contains(ApplicationObject object){
         return cacheMap.containsKey(object);
     }
 
+    public boolean contains(ObjectName name){
+        return nameCacheMap.containsKey(name);
+    }
+
     public Date getLastUpdateTime(ApplicationObject object){
         return cacheMap.get(object);
+    }
+
+    public ApplicationObject get(ObjectName object){
+        return nameCacheMap.get(name);
     }
 }

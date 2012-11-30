@@ -10,6 +10,8 @@ public class SFSApplicationServer implements ApplicationServer {
     private static String host = null;
     private SFSApplicationServer server = null;
 
+    private static ApplicationObjectCache cache = null;
+
     public SFSApplicationServer getInstance(String sfsHost){
         if(server ==null)
             server = new SFSApplicationServer(sfsHost);
@@ -19,6 +21,7 @@ public class SFSApplicationServer implements ApplicationServer {
     private SFSApplicationServer(String sfsHost){
         //  http://<host>:<port>
         host = sfsHost;
+        cache = new ApplicationObjectCache(1073741824);
     }
 
     public ApplicationObject doRead(ObjectName objectName){
@@ -169,13 +172,27 @@ public class SFSApplicationServer implements ApplicationServer {
                 String dest  = cleanPath(objParams[1].getStringName());
 
                 //check if the object are in the cache and check their type
-                //otherwise execute the following code:
-                JSONObject srcGet = new JSONObject(CurlOps.get(host + source));
-                JSONObject dstGet = new JSONObject(CurlOps.get(host + dest));
+                JSONObject srcGet = null;
+                if(cache.contains(objParams[0])){
+                    srcGet = ((SFSApplicationObject)cache.get(objParams[0])).
+                        getInfo;
+                } else {
+                    srcGet = new JSONObject(CurlOps.get(host + source));
+                }
                 String srcType = ((String)((JSONObject)srcGet.get("properties")).
                         get("Type"));
+                JSONObject dstGet = null;
+                //check if the object are in the cache and check their type
+                if(cache.contains(objParams[1])){
+                    dstGet = ((SFSApplicationObject)cache.get(objParams[1])).
+                        getInfo;
+                } else {
+                    //otherwise execute the following code:
+                    dstGet = new JSONObject(CurlOps.get(host + dest));
+                }
                 String dstType = ((String)((JSONObject)srcGet.get("properties")).
                         get("Type"));
+
                 if(srcType.equals("Item") && dstType.equals("Meter"))
                     retObj = addSymlink(source, dest);
             }
@@ -193,22 +210,38 @@ public class SFSApplicationServer implements ApplicationServer {
                 String source = cleanPath(objParams[0].getStringName());
                 String dest  = cleanPath(objParams[1].getStringName());
 
-                //check if the object are in the cache and check their type
-                //otherwise execute the following code:
                 if(source.contains("/qrc")){
-                    JSONObject dstGet = new JSONObject(CurlOps.get(host + dest));
+                    JSONObject dstGet = null;
+                    if(cache.contains(objParams[1])){
+                        dstGet = ((SFSApplicationObject)cache.get(objParams[1])).
+                            getInfo;
+                    } else {
+                        dstGet = new JSONObject(CurlOps.get(host + dest));
+                    }
                     String dstType = ((String)((JSONObject)srcGet.get("properties")).
                             get("Type"));
                     if(dstType.equals("Item") || dstType.equals("Meter") ||
                              dstType.equals("Space"))
                         retObj = addSymlink(source, dest);
                 } else {
-                    JSONObject srcGet = new JSONObject(CurlOps.get(host + source));
-                    JSONObject dstGet = new JSONObject(CurlOps.get(host + dest));
+                    JSONObject srcGet = null;
+                    if(cache.contains(objParams[0])){
+                        srcGet = ((SFSApplicationObject)cache.get(objParams[0])).
+                            getInfo;
+                    } else {
+                        srcGet = new JSONObject(CurlOps.get(host + source));
+                    }
                     String srcType = ((String)((JSONObject)srcGet.get("properties")).
                             get("Type"));
+                    JSONObject dstGet = null;
+                    if(cache.contains(objParams[1])){
+                        dstGet = ((SFSApplicationObject)cache.get(objParams[1])).
+                            getInfo;
+                    } else {
+                        dstGet = new JSONObject(CurlOps.get(host + dest));
+                    }
                     String dstType = ((String)((JSONObject)srcGet.get("properties")).
-                            get("Type"));
+                            get("Type"));   
                     if(srcType.equals("Space") && 
                             (dstType.equals("Item") || dstType.equals("Meter")) )
                         retObj = addSymlink(source, dest);
@@ -228,12 +261,25 @@ public class SFSApplicationServer implements ApplicationServer {
                 String source = cleanPath(objParams[0].getStringName());
                 String dest  = cleanPath(objParams[1].getStringName());
 
-                //check if the object are in the cache and check their type
-                //otherwise execute the following code:
-                JSONObject srcGet = new JSONObject(CurlOps.get(host + source));
-                JSONObject dstGet = new JSONObject(CurlOps.get(host + dest));
+                JSONObject srcGet = null;
+                if(cache.contains(objParams[0])){
+                    srcGet = ((SFSApplicationObject)cache.get(objParams[0])).
+                        getInfo;
+                } else {
+                    srcGet = new JSONObject(CurlOps.get(host + source));
+                }
                 String srcType = ((String)((JSONObject)srcGet.get("properties")).
                         get("Type"));
+                //check if the object are in the cache and check their type
+                //otherwise execute the following code:
+                
+                JSONObject dstGet = null;
+                if(cache.contains(objParams[1])){
+                    dstGet = ((SFSApplicationObject)cache.get(objParams[1])).
+                        getInfo;
+                } else {
+                    dstGet = new JSONObject(CurlOps.get(host + dest));
+                }
                 String dstType = ((String)((JSONObject)srcGet.get("properties")).
                         get("Type"));
                 if(srcType.equals("Item") && dstType.equals("Item"))
