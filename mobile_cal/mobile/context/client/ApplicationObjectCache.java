@@ -7,30 +7,75 @@ public class ApplicationObjectCache {
 
     private static int maxCacheSize= -1;
     private static int cacheSize = -1;
+    private static ConcurrentHashMap<ObjectName, ApplicationObject> nameCacheMap= null;
     private static ConcurrentHashMap<ApplicationObject, Date> cacheMap = null;
-    private static ConcurrentHashMap<Date, ApplicationObject> reverseCacheMap = null;
+    private static ConcurrentHashMap<Date, ArrayList<ApplicationObject>> reverseCacheMap = null;
     
     public ApplicationObjectCache(int sizeInBytes){
         maxCacheSize = sizeInBytes;
+
+        nameCacheMap = new ConcurrentHashMap<ObjectName, ApplicationObject>();
         cacheMap = new ConcurrentHashMap<ApplicationObject, Date>();
-        reverseCacheMap = new ConcurrentHashMap<Date, ApplicationObject>();
+        reverseCacheMap = new ConcurrentHashMap<Date, ArrayList<ApplicationObject>>();
     }
 
     public synchronized boolean updateEntry(ApplicationObject object){
         if(cacheMap.containsKey(object))
-            cacheMap.replace(object, new Date(System.currentTimeMillis()));
+
+            //update the map
+            Date oldDate = cacheMap.get(object);
+            Date d = new Date(System.currentTimeMillis());
+            cacheMap.replace(object, d);
+
+            //update the reverse map
+            ArrayList<ApplicationObject> l = reverseCacheMap.get(oldDate);
+            l.remove(object);
+            if(reverseCacheMap.contains(d))
+                l = reverseCacheMap.get(d);
+            else 
+                l = new ArrayList<ApplicationObject>();
+
+            l.add(object);
+            reverseCacheMap.replace(d, l);
+        }
         else{
             int newsize = object.getBytes().length + 8;
             if(cacheSize+newSize<=maxCacheSize){
+
+                //put it in the lookup map
                 Date d = new Date(System.currentTimeMillis());
                 cacheMap.put(object, d);
-                reverseCacheMap.put(d, object);
+                
+                //put it in the reverse lookup map
+                ArrayList<ApplicationObject> l = null;
+                if(reverseCacheMap.contains(d))
+                    l = reverseCacheMap.get(d);
+                else 
+                    l = new ArrayList<ApplicationObject>();
+                l.add(object);
+                reverseCacheMap.replace(d, l);
+
+                //add it to the name cache
+                nameCacheMap.put(object.getName(), object);
             }
             else{
                 remove(newSize);
+
+                //put it in the lookup map
                 Date d = new Date(System.currentTimeMillis());
                 cacheMap.put(object, d);
-                reverseCacheMap.put(d, object);
+
+                //put it in the reverse lookup map
+                ArrayList<ApplicationObject> l = null;
+                if(reverseCacheMap.contains(d))
+                    l = reverseCacheMap.get(d);
+                else 
+                    l = new ArrayList<ApplicationObject>();
+                l.add(object);
+                reverseCacheMap.replace(d, l);
+
+                //add it to the name cache
+                nameCacheMap.put(object.getName(), object);
                 cacheSize+=newSize;
             }
         }
@@ -41,20 +86,24 @@ public class ApplicationObjectCache {
         //removes >=sizeBytes worth of entries from the cache
         ArrayList<Date> list = new ArrayList<Date>(cacheMap.values());
         Collections.sort(list);
-        Date thisDate = list.get(0);
-        ApplicationObject o = reverseCacheMap.get(thisDate);
-        reverseCacheMap.remove(thisDate);
-        cacheMap.remove(o);
-        totalRemoved += o.getBytes().length+4;
-        cacheSize -= totalRemoved;
-        list.remove(0);
+
+        Date thisDate = null;
+        ApplicationObject o = null;
+        ArrayList<ApplicationObject> l = null;
         while(totalRemoved<sizeBytes && list.size()>0){
             thisDate = list.get(0);
-            ApplicationObject o = reverseCacheMap.get(thisDate);
-            reverseCacheMap.remove(thisDate);
-            cacheMap.remove(o);
-            totalRemoved += o.getBytes().length+4;
-            cacheSize -= totalRemoved;
+            l = reverseCacheMap.get(thisDate);
+            if(l.size()>0){
+                o= l.get(0);
+                l.remove(0);
+                cacheMap.remove(o);
+                totalRemoved += o.getBytes().length+4;
+                cacheSize -= totalRemoved;
+                if(l.size()==0)
+                    reverseCacheMap.remove(thisDate);
+            } else {
+                reverseCacheMap.remove(thisDate);
+            }
             list.remove(0);
         }
 
