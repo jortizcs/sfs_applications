@@ -4,10 +4,14 @@ import mobile.context.app.*;
 
 public abstract class ContextObjectLayer{
 
+    protected static ApplicationServer appServer = null;
+
     /**
-     *
+     * Instantiate the ContextObjectLayer;
      */
-    public ContextObjectLayer(){}
+    public ContextObjectLayer(ApplicationServer server){
+        appServer = server;
+    }
     
     /**
      * Attempts to read from network, if connection inactive; read local copy or return null
@@ -17,7 +21,6 @@ public abstract class ContextObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject read(ObjectName objectName){
-        return null;
     }
 
     /**
@@ -32,9 +35,7 @@ public abstract class ContextObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject read(ObjectName objectName, long freshness){
-        return null;
-    }
+    public abstract ApplicationObject read(ObjectName objectName, long freshness);
 
     /**
      * Registers a callback that is called when the object referred to by objectName is attained from the server
@@ -159,7 +160,7 @@ public abstract class ContextObjectLayer{
      * @returns true if connect, false otherwise.
      */
     public boolean getConnectionState(){
-        return false;
+        return netAccessThread.getNetAccessState();
     }
 
     /**
@@ -168,5 +169,46 @@ public abstract class ContextObjectLayer{
      * @param callback triggered when the connection state changes.
      */
     public void registerOnConnStateChange(OnConnStateChangeCallback callback){
+        netAccessThread.register(callback);
+    }
+
+    /**
+     * Removes the callback. 
+     *
+     * @param callback triggered when the connection state changes.
+     */
+    public void unregisterOnConnStateChange(OnConnStateChangeCallback callback){
+        netAccessThread.unregister(callback);
+    }
+
+    public class NetAccessThread implements Runnable{
+        private static appServerIsUp = false;
+        private static ArrayList<OnConnStateChangeCallback> callbacks = null;
+        private static int freqSec = 60;
+        
+        public NetAccessThread(){
+            callbacks = new ArrayList<OnConnStateChangeCallback>();
+        }
+
+        private void register(OnConnStateChangeCallback c){
+            callbacks.add(c);
+        }
+
+        private void unregister(OnConnStateChangeCallback c){
+            callbacks.remove(c);
+        }
+
+        public void run(){
+            while(true){
+                boolean thisState = appServer.isUp();
+                if(thisState!=appServerIsUp){
+                    for(int i=0; i<callbacks.size(); i++)
+                        callbacks.get(i).stateChanged(thisState);
+                    appServerIsUp = thisState;
+                }
+                Thread.sleep(freqSec*1000);
+            }
+        }
+
     }
 }

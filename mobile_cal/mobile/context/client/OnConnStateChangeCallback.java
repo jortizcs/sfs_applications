@@ -1,12 +1,5 @@
 package mobile.context.client;
 
 public abstract class OnConnStateChangeCallback{
-    public enum State {
-        ACCESSIBLE, NOT_ACCESSIBLE
-    }
-
-    public OnConnStateChangeCallback(){}
-
-    public void stateChanged(State state){
-    }
+    public abstract void stateChanged(boolean up);
 }

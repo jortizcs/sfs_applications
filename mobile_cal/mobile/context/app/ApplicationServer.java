@@ -10,4 +10,6 @@ public interface ApplicationServer{
     public ApplicationObject[] doWriteExpession(Expression exp);
 
     public byte[] doQuery(String queryString);
+
+    public boolean isUp();
 }
