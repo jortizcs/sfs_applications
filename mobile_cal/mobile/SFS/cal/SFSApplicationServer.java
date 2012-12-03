@@ -24,7 +24,7 @@ public class SFSApplicationServer implements ApplicationServer {
         cache = new ApplicationObjectCache(1073741824);
     }
 
-    public ApplicationObject doRead(ObjectName objectName){
+    public ApplicationObject doRead(ObjectName objectName) throws Exception{
         SFSApplicationObject obj=  null;
         try {
             if(objectName.getStringName().startsWith("config:")){
@@ -39,6 +39,37 @@ public class SFSApplicationServer implements ApplicationServer {
             }
         } catch(Exception e){}
         return obj;
+    }
+
+    public boolean exists(ObjectName objectName) throws Exception{
+        SFSApplicationObject obj=  null;
+        try {
+            String reply = CurlOps.get(host + objectName.getStringName());
+            if(reply !=null)
+                return true;
+        } catch(Exception e){
+            if(e instanceof SocketTimeoutException)
+                throw new Exception("Timeout");
+            else if(e instanceof IOException)
+                throw new Exception("Connection problem");
+        }
+        return return false;
+    }
+
+    public boolean isUp(){
+        try{
+            exists(new ObjectName("/time"));
+        } catch(Exception e){
+            return false;
+        }
+        return true;
+    }
+
+    public long getTime(){
+        ApplicationObject resp = doRead(new ObjectName("/time"));
+        if(resp!=null)
+            resp.getInfo().get("Now").longValue();
+        return -1L;
     }
 
     public ApplicationObject doWrite(Operation op){
@@ -316,4 +347,5 @@ public class SFSApplicationServer implements ApplicationServer {
         }
         return retObj;
     }
+
 }

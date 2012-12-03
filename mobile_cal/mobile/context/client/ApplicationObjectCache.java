@@ -29,6 +29,11 @@ public class ApplicationObjectCache {
 
     }
 
+    public synchronized boolean updateEntries(ApplicationObject[] objects){
+        for(int i=0; i<objects.length; i++)
+            updateEntry(objects[i]);
+    }
+
     public synchronized boolean updateEntry(ApplicationObject object){
         if(cacheMap.containsKey(object))
 
@@ -131,7 +136,7 @@ public class ApplicationObjectCache {
         return cacheMap.get(object);
     }
 
-    public ApplicationObject get(ObjectName object){
+    public ApplicationObject get(ObjectName objectName){
         return nameCacheMap.get(name);
     }
 }

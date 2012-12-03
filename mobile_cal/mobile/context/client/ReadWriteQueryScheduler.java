@@ -8,8 +8,10 @@ import java.util.concurrent.*;
 public class ReadWriteQueryScheduler{
     private static ReadWriteQueryScheduler scheduler = null;
     private static ApplicationServer server = null;
+    private static ApplicationObjectCache cache = null;
 
     private static ExecutorService executorService = null;
+    private static boolean isConnected = false;
 
     enum CallbackType {
         READ,WRITE,WRITE_EXPRESSION,QUERY
@@ -18,6 +20,8 @@ public class ReadWriteQueryScheduler{
     private ReadWriteQueryScheduler(ApplicationServer s){
         server = s;
         executorService = Executors.newCachedThreadPool();
+        cache = ApplicationObjectCache.getInstance(0/*uses default cache size*/);
+        setupConnectionInfo();
     }
 
     public static ReadWriteQueryScheduler getInstance(ApplicationServer s){
@@ -70,6 +74,15 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
+    private void setupConnectionInfo(){
+        isConnected = CALObjectLayer.appServerIsUp;
+        CALObjectLayer.registerOnConnStateChange(new OnConnStateChangeCallback(){
+            public void stateChange(boolean up){
+                isConnected = up;
+            }
+        });
+    }
+
     public class RWQTask implements Runnable{
 
         public Operation operation = null;
@@ -109,20 +122,47 @@ public class ReadWriteQueryScheduler{
         }
 
         public void run(){
-            //go get the data -- blocking
-            switch(callbackType){
-                case READ:
-                    readCallback.readDone(server.doRead(operation));
-                    break;
-                case WRITE:
-                    writeCallback.writeDone(server.doWrite(operation));
-                    break;
-                case WRITE_EXPRESSION:
-                    writeCallback.writeDone(server.doWrite(exp));
-                    break;
-                case QUERY:
-                    queryCallback.queryDone(server.doQuery(operation));
-                    break;
+            while(true){
+                try {
+                    switch(callbackType){
+                        case READ:
+                            ApplicationObject object = server.doRead(operation);
+                            readCallback.readDone(object);
+                            if(object!=null)
+                                cache.updateEntry(object);
+                            return;
+                        case WRITE:
+                            ApplicationObject object = server.doWrite(operation);
+                            writeCallback.writeDone(object);
+                            if(object!=null)
+                                cache.updateEntry(object);
+                            return;
+                        case WRITE_EXPRESSION:
+                            ApplicationObject[] objects = server.doWrite(exp);
+                            writeCallback.writeDone(objects);
+                            if(objects!=null)
+                                cache.updateEntries(objects);
+                            return;
+                        case QUERY:
+                            ApplicationObject queryRes = server.doQuery(operation)
+                            queryCallback.queryDone(queryRes);
+                            if(queryRes!=null)
+                                cache.updatEntry(queryRes);
+                            return;
+                    }
+                } catch(Exception e){
+                    localSleep();
+                }
+            }
+        }
+
+        private void localSleep(){
+            try{
+                //to prevent an explosion of threads all trying to read from the network
+                int jitter = Random.nextInt();
+                Thread.sleep(CALObjectLayer.accessFrequency+1000+jitter); 
+            } catch(Exception e){
+                e.printStackTrace();
             }
         }
     }
