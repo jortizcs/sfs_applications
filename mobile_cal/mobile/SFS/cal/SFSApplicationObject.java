@@ -24,7 +24,9 @@ public class SFSApplicationObject extends ApplicationObject {
     }
 
     public JSONObject getProperties(){
-        return (JSONObject)nodeInfo.get("properties");
+        if(nodeInfo.containsKey("properties"))
+            return (JSONObject)nodeInfo.get("properties");
+        return null;
     }
 
 }

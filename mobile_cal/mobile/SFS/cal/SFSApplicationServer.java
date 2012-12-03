@@ -27,8 +27,16 @@ public class SFSApplicationServer implements ApplicationServer {
     public ApplicationObject doRead(ObjectName objectName){
         SFSApplicationObject obj=  null;
         try {
-            JSONObject info = new JSONObject(CurlOps.get(host + objectName.getStringName()));
-            obj = new SFSApplicationObject(objectName, info);
+            if(objectName.getStringName().startsWith("config:")){
+                StringTokenizer tokenizer = new StringTokenizer(objectName.getStringName(), ":");
+                String url = tokenizer.nextToken();
+                url= tokenizer.nextToken();
+                JSONObject info = new JSONObject(CurlOps.get(url));
+                obj = new SFSApplicationObject(objectName, info);
+            } else{
+                JSONObject info = new JSONObject(CurlOps.get(host + objectName.getStringName()));
+                obj = new SFSApplicationObject(objectName, info);
+            }
         } catch(Exception e){}
         return obj;
     }

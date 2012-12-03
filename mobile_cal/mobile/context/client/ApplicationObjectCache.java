@@ -10,13 +10,23 @@ public class ApplicationObjectCache {
     private static ConcurrentHashMap<ObjectName, ApplicationObject> nameCacheMap= null;
     private static ConcurrentHashMap<ApplicationObject, Date> cacheMap = null;
     private static ConcurrentHashMap<Date, ArrayList<ApplicationObject>> reverseCacheMap = null;
-    
-    public ApplicationObjectCache(int sizeInBytes){
+    private static ApplicationObjectCache cache = null; 
+
+    private ApplicationObjectCache(int sizeInBytes){
         maxCacheSize = sizeInBytes;
 
         nameCacheMap = new ConcurrentHashMap<ObjectName, ApplicationObject>();
         cacheMap = new ConcurrentHashMap<ApplicationObject, Date>();
         reverseCacheMap = new ConcurrentHashMap<Date, ArrayList<ApplicationObject>>();
+    }
+
+    public static ApplicationObjectCache getInstance(int sizeInBytes){
+        if(sizeInBytes>0 && cache ==null)
+            cache = new ApplicationObjectCache(sizeInBytes);
+        else if(sizeInBytes<=0 && cache == null)
+            cache = new ApplicatoinObjectCache(1073741824/*1GB*/);
+        return cache;
+
     }
 
     public synchronized boolean updateEntry(ApplicationObject object){

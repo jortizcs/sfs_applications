@@ -2,14 +2,14 @@ package mobile.context.client;
 
 import mobile.context.app.*;
 
-public abstract class ContextObjectLayer{
+public abstract class CALObjectLayer{
 
     protected static ApplicationServer appServer = null;
 
     /**
-     * Instantiate the ContextObjectLayer;
+     * Instantiate the CALObjectLayer;
      */
-    public ContextObjectLayer(ApplicationServer server){
+    public CALObjectLayer(ApplicationServer server){
         appServer = server;
     }
     
