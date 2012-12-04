@@ -7,13 +7,13 @@ public interface Operation {
     /**
      * All the objects to perform the operation on.
      */
-    public void setParams(ObjectName... objectNames);
+    public void setParams(ObjectName[] objectNames);
    
     /**
      * The corresponding byte array will be matched with the objectname in the setParams method.
      * This supports operations that require that some new data be applied to the object.
      */ 
-    public void setData(byte[]... data);
+    public void setData(byte[] data);
 
     /**
      * Returns the operator.
@@ -32,7 +32,7 @@ public interface Operation {
      * availble, attempts to execute the operation locally.  Returns the result of the transformation
      * on the original ApplicationObject.
      */
-    public ApplicationObject execute();
+    public ApplicationObject[] executeLocal();
 
     /**
      * Executes the operation, if the objects are all <= freshness milliseocnds old.
@@ -45,7 +45,7 @@ public interface Operation {
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject execute(long freshness);
+    //public ApplicationObject[] executeLocal(long freshness);
 
     /**
      * Registers a callback that is called when the object referred to by objectName is written to the server
@@ -56,7 +56,7 @@ public interface Operation {
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandler allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandler execute(WriteDoneCallback callback);
+    //public CallbackHandler execute(WriteDoneCallback callback);
 
 
 }

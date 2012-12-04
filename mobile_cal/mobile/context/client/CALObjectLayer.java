@@ -172,7 +172,19 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject write(ObjectName[] objectName, byte[] data, Operation op){
+    public ApplicationObject[] write(ObjectName[] objectName, byte[] data, Operation op ){
+        if(op!=null && objectName.length>0){
+            op.setParams(objectNames);
+            op.setData(data);
+            try {
+                ApplicationObject[] xformedObjects = server.doWrite(op);
+            } catch(Exception e){
+                return op.executeLocal();
+            }
+            if(xformedObjects==null)
+                return op.executeLocal();
+            return xformedObjects;
+        }
         return null;
     }
 
@@ -189,7 +201,19 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject write(ObjectName[] objectName, byte[] data, Operation op, long freshness){
+    public ApplicationObject[] write(ObjectName[] objectName, byte[] data, Operation op, long freshness){
+        if(op!=null && objectName.length>0){
+            op.setParams(objectNames);
+            op.setData(data);
+            try {
+                ApplicationObject[] xformedObjects = server.doWrite(op);
+            } catch(Exception e){
+                return op.executeLocal(freshness);
+            }
+            if(xformedObjects==null)
+                return op.executeLocal(freshness);
+            return xformedObjects;
+        }
         return null;
     }
 
@@ -202,7 +226,12 @@ public abstract class CALObjectLayer{
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandle write(ObjectName[] objectName, byte[] data, Operation op, WriteDoneCallback callback){
+    public CallbackHandle write(ObjectName[] objectNames, byte[] data, Operation op, WriteDoneCallback callback){
+        if(objectNames!=null && objectNames.length>0){
+            op.setParams(objectNames);
+            op.setData(data);
+            return scheduler.schedule(op, callback);
+        }
         return null;
     }
 
@@ -216,7 +245,39 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject writeEOP(ObjectName[] objectName, byte[] data, Operation op){
+    public ApplicationObject[] writeEOP(ObjectName[] objectNames, byte[] data, Operation op){
+        int totalObjSize = 0;
+        if(objectsNames!=null && objectNames.length>0){
+
+            int appObjCnt =0;
+            for(int i=0; i<objectNames.length; i++){
+                ApplicationObject thisObj = cache.get(objectNames[i]);
+                if(cache.contains(objectNames[i])){
+                    appObjCnt+=1;
+                    totalObjSize += thisObj.getBytes().length;
+                } else{
+                    totalObjSize += ApplicationObjectCache.AVG_OBJ_SIZE;
+                }
+            }
+
+            boolean canAfford = false;
+            if(inCache)
+                canAfford = budgeter.canAfford(cache.get(totalObjSize);
+            else
+                canAfford = budgeter.canAfford(totalObjSize);
+            if(canAfford){
+                op.setParams(objectNames);
+                op.setData(data);
+                try {
+                    ApplicationObject[] modifiedObjects = server.doWrite(op);
+                    return modifiedObjects;
+                } catch(Exception e){
+                    if(appObjCnt==objectNames.length){
+                        return op.executeLocal(op);
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -234,6 +295,40 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject writeEOP(ObjectName[] objectName, byte[] data, Operation op, long freshness){
+        int totalObjSize = 0;
+        boolean allFresh = true;
+        if(objectsNames!=null && objectNames.length>0){
+            int appObjCnt =0;
+            for(int i=0; i<objectNames.length; i++){
+                ApplicationObject thisObj = cache.get(objectNames[i]);
+                if(cache.contains(objectNames[i])){
+                    appObjCnt+=1;
+                    totalObjSize += thisObj.getBytes().length;
+                    if(System.currentTimeMillis()-cache.getLastUpdateTime(thisObj).getTime()>freshness)
+                        allFresh = false;
+                } else{
+                    totalObjSize += ApplicationObjectCache.AVG_OBJ_SIZE;
+                }
+            }
+
+            boolean canAfford = false;
+            if(inCache)
+                canAfford = budgeter.canAfford(cache.get(totalObjSize);
+            else
+                canAfford = budgeter.canAfford(totalObjSize);
+            if(canAfford){
+                op.setParams(objectNames);
+                op.setData(data);
+                try {
+                    ApplicationObject[] modifiedObjects = server.doWrite(op);
+                    return modifiedObjects;
+                } catch(Exception e){
+                    if(appObjCnt==objectNames.length && allFresh){
+                        return op.executeLocal(op);
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -246,7 +341,12 @@ public abstract class CALObjectLayer{
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandle writeEOP(ObjectName[] objectName, byte[] data, Operation op, WriteDoneCallback callback){
+    public CallbackHandle writeEOP(ObjectName[] objectNames, byte[] data, Operation op, WriteDoneCallback callback){
+        if(objectNames!=null && objectName.length>0){
+            op.setParams(objectNames);
+            op.setData(data);
+            return scheduler.schedule(op, callback, true);
+        }
         return null;
     }
 
