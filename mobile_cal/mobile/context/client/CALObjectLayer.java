@@ -33,15 +33,14 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject read(ObjectName objectName){
+    public ApplicationObject read(ObjectName objectName, boolean cacheResult){
         ApplicationObject thisObject = appServer.doRead(objectName);
         if(thisObject == null && cache.contains(objectName)){
             return cache.get(objectName);
-        } else if (thisObject!=null){
+        } else if (cacheResult && thisObject!=null){
             cache.updateEntry(thisObject);
-            return thisObject;
         }
-        return null;
+        return thisObject;
     }
 
     /**
@@ -56,7 +55,7 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public abstract ApplicationObject read(ObjectName objectName, long freshness){
+    public abstract ApplicationObject read(ObjectName objectName, long freshness, boolean cacheResult){
         ApplicationObject appObject = null;
         if(cache.contains(objectName)){
             appObject = cache.get(objectName);
@@ -64,7 +63,7 @@ public abstract class CALObjectLayer{
                 return appObject;
         } else {
             appObject = appServer.doRead(objectName);
-            if(appObject!=null)
+            if(cacheResult && appObject!=null)
                 cache.updateEntry(appObject);
         }
         return appObject;
@@ -78,8 +77,8 @@ public abstract class CALObjectLayer{
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandle read(ObjectName objectName, ReadDoneCallback callback){
-        return scheduler.schedule(objectName, callback, false);
+    public CallbackHandle read(ObjectName objectName, ReadDoneCallback callback, boolean cacheResult){
+        return scheduler.schedule(objectName, callback, false, cacheResult);
     }
 
     /**
@@ -90,7 +89,7 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject readEOP(ObjectName objectName){
+    public ApplicationObject readEOP(ObjectName objectName, boolean cacheResult){
         boolean inCache = cache.contains(objectName);
         boolean canAfford = false;
         if(inCache)
@@ -99,7 +98,7 @@ public abstract class CALObjectLayer{
             canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
 
         if(canAfford){
-            return read(objectName);
+            return read(objectName, cacheResult);
         } else if(inCache && !canAfford){
             return cache.get(objectName);
         }
@@ -118,7 +117,7 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public abstract ApplicationObject readEOP(ObjectName objectName, long freshness){
+    public ApplicationObject readEOP(ObjectName objectName, long freshness, boolean cacheResult){
         boolean inCache = cache.contains(objectName);
         boolean canAfford = false;
         if(inCache)
@@ -128,7 +127,7 @@ public abstract class CALObjectLayer{
 
 
         if(canAfford){
-            return read(objectName, freshness);
+            return read(objectName, freshness, cacheResult);
         } else if(inCache && !canAfford){
             appObject = cache.get(objectName);
             if((System.currentTimeMillis()-cache.getLastUpdateTime(appObject).getTime())<=freshness)
@@ -145,7 +144,7 @@ public abstract class CALObjectLayer{
      * @param callback called when the given object is read from the server and placed in the local cache.
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
-    public CallbackHandle readEOP(ObjectName objectName, ReadDoneCallback callback){
+    public CallbackHandle readEOP(ObjectName objectName, ReadDoneCallback callback, boolean cacheResult){
         boolean inCache = cache.contains(objectName);
         boolean canAfford = false;
         if(inCache)
@@ -155,7 +154,7 @@ public abstract class CALObjectLayer{
 
 
         if(canAfford){
-            return read(objectName);
+            return read(objectName, cacheResult);
         } else if(inCache && !canAfford){
             return cache.get(objectName);
         }
@@ -537,44 +536,6 @@ public abstract class CALObjectLayer{
             return server.schedule(e, callback, true);
         return null;
     }
-
-    /**
-     * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 
-     * local cache.  Method should block until the query results return.
-     *
-     */
-    public abstract ApplicationObject query(String queryString);
-
-    /**
-     * Send a query to the application server if and only if we have been disconnected > freshness millisecond ago.    
-     * If the server is, unavailable, null is returned.  Otherwise the query is answered locally.
-     *
-     */
-    public abstract ApplicationObject query(String queryString, long freshness);
-
-    /**
-     * Sends a query to the application server.
-     */
-    public abstract CallbackHandle query(String queryString, QueryDoneCallback callback);
-
-    /**
-     * Send a query to the application server.    If the server is unavailable, attempts to answer the query using the 
-     * local cache.  Method should block until the query results return.
-     *
-     */
-    public abstract ApplicationObject queryEOP(String queryString);
-
-    /**
-     * Send a query to the application server if and only if we have been disconnected > freshness millisecond ago.    
-     * If the server is, unavailable, null is returned.  Otherwise the query is answered locally.
-     *
-     */
-    public abstract ApplicationObject queryEOP(String queryString, long freshness);
-
-    /**
-     * Sends a query to the application server.
-     */
-    public abstract CallbackHandle queryEOP(String queryString, QueryDoneCallback callback);
 
     /**
      * Returns the current connection state (network access bit).

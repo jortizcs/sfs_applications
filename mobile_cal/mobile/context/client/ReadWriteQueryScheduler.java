@@ -14,7 +14,7 @@ public class ReadWriteQueryScheduler{
     private static boolean isConnected = false;
 
     enum CallbackType {
-        READ,WRITE,WRITE_EXPRESSION,QUERY
+        READ,WRITE,WRITE_EXPRESSION
     }
 
     private ReadWriteQueryScheduler(ApplicationServer s){
@@ -34,9 +34,9 @@ public class ReadWriteQueryScheduler{
         return true;
     }
 
-    public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget){
+    public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget, boolean cacheResult){
         try {
-            RWQTask task = new RWQTask(objectName, callback, checkBudget);
+            RWQTask task = new RWQTask(objectName, callback, checkBudget, boolean cacheResult);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -54,16 +54,6 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
-    public synchronized CallbackHandle schedule(String query, QueryDoneCallback callback, boolean checkBudget){
-        try {
-            ObjectName objName = new ObjectName(query);
-            RWQTask task = new RWQTask(objName, callback, checkBudget);
-            Future<?> future = executorService.submit(task);
-            CallbackHandle h = new CallbackHandle(future);
-            return h;
-        } catch(Exception e){}
-        return null;
-    }
 
     public synchronized CallbackHandle schedule(Expression exp, WriteDoneCallback callback, boolean checkBudget){
         try {
@@ -91,16 +81,17 @@ public class ReadWriteQueryScheduler{
         public Expression exp = null;
         public ReadDoneCallback readCallback = null;
         public WriteDoneCallback writeCallback = null;
-        public QueryDoneCallback queryCallback = null;
 
         public CallbackType callbackType = CallbackType.READ;
         public boolean budgetCheck = false;
+        public boolean cacheResult = true;
         
-        public RWQTask(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget){
+        public RWQTask(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget, boolean saveInCache){
             callbackType = CallbackType.READ;
             readCallback = callback;
             budgetCheck = checkBudget;
             objName = objectName;
+            cacheResult = saveInCache;
         }
 
         public RWQTask(Operation op, WriteDoneCallback callback, boolean checkBudget){
@@ -117,12 +108,6 @@ public class ReadWriteQueryScheduler{
             budgetCheck = checkBudget;
         }
 
-        public RWQTask(Operation op, QueryDoneCallback callback, boolean checkBudget){
-            callbackType = CallbackType.QUERY;
-            operation = op;
-            queryCallback = callback;
-            budgetCheck = checkBudget;
-        }
 
         public CallbackType getCallbackType(){
             return callbackType;
@@ -156,6 +141,7 @@ public class ReadWriteQueryScheduler{
                                     return;
                                 }
                             }
+                            break;
                         case WRITE:
                             if(!budgetCheck){
                                 //do it if budget there are no budget concerns
@@ -193,6 +179,7 @@ public class ReadWriteQueryScheduler{
                                     return;
                                 }
                             }
+                            break;
                         case WRITE_EXPRESSION:
                             if(!budgetCheck){
                                 //do it if budget there are no budget concerns
@@ -235,30 +222,6 @@ public class ReadWriteQueryScheduler{
                                 }
                             }
                             break;
-                        case QUERY:
-                            if(!budgetCheck){
-                                //do it if budget there are no budget concerns
-                                ApplicationObject queryRes = server.doQuery(operation)
-                                queryCallback.queryDone(queryRes);
-                                if(queryRes!=null)
-                                    cache.updatEntry(queryRes);
-                                return;
-                            } else {
-                                //check your budget before sending, don't send until you can afford to
-                                boolean inCache = cache.contains(objectName);
-                                boolean canAfford = false;
-                                if(inCache)
-                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
-                                else
-                                    canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
-                                if(canAfford){
-                                    ApplicationObject queryRes = server.doQuery(objectName.getStringName());
-                                    queryCallback.queryDone(queryRes);
-                                    if(queryRes!=null)
-                                        cache.updatEntry(queryRes);
-                                    return;
-                                }
-                            }
                     }
                 } catch(Exception e){
                     localSleep();

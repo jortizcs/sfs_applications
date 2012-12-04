@@ -8,7 +8,7 @@ public interface Operation {
      * All the objects to perform the operation on.
      */
     public void setParams(ObjectName[] objectNames);
-   
+
     /**
      * The corresponding byte array will be matched with the objectname in the setParams method.
      * This supports operations that require that some new data be applied to the object.

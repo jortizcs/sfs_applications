@@ -15,6 +15,7 @@ public class ObjectName{
         setName(n);
     }
 
+
     public ObjectName(int n){
         setName(n);
     }
