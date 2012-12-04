@@ -34,9 +34,9 @@ public class ReadWriteQueryScheduler{
         return true;
     }
 
-    public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback){
+    public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget){
         try {
-            RWQTask task = new RWQTask(op, callback);
+            RWQTask task = new RWQTask(op, callback, checkBudget);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -44,9 +44,9 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
-    public synchronized CallbackHandle schedule(Operation op, WriteDoneCallback callback){
+    public synchronized CallbackHandle schedule(Operation op, WriteDoneCallback callback, boolean checkBudget){
         try {
-            RWQTask task = new RWQTask(op, callback);
+            RWQTask task = new RWQTask(op, callback, checkBudget);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -54,9 +54,9 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
-    public synchronized CallbackHandle schedule(String query, QueryDoneCallback callback){
+    public synchronized CallbackHandle schedule(String query, QueryDoneCallback callback, boolean checkBudget){
         try {
-            RWQTask task = new RWQTask(op, callback);
+            RWQTask task = new RWQTask(op, callback, checkBudget);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -64,9 +64,9 @@ public class ReadWriteQueryScheduler{
         return null;
     }
 
-    public synchronized CallbackHandle schedule(Expression exp, QueryDoneCallback callback){
+    public synchronized CallbackHandle schedule(Expression exp, QueryDoneCallback callback, boolean checkBudget){
         try {
-            RWQTask task = new RWQTask(expression, callback);
+            RWQTask task = new RWQTask(expression, callback, checkBudget);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -92,29 +92,34 @@ public class ReadWriteQueryScheduler{
         public QueryDoneCallback queryCallback = null;
 
         public CallbackType callbackType = CallbackType.READ;
+        public boolean budgetCheck = false;
         
-        public RWQTask(Operation op, ReadDoneCallback callback){
+        public RWQTask(Operation op, ReadDoneCallback callback, boolean checkBudget){
             callbackType = CallbackType.READ;
             operation = op;
             readCallback = callback;
+            budgetCheck = checkBudget;
         }
 
-        public RWQTask(Operation op, WriteDoneCallback callback){
+        public RWQTask(Operation op, WriteDoneCallback callback, boolean checkBudget){
             callbackType = CallbackType.WRITE;
             operation = op;
             writeCallback = callback;
+            budgetCheck = checkBudget;
         }
 
-        public RWQTask(Expression expression, WriteDoneCallback callback){
+        public RWQTask(Expression expression, WriteDoneCallback callback, boolean checkBudget){
             callbackType = CallbackType.WRITE_EXPRESSION;
             exp = expression;
             writeCallback = callback;
+            budgetCheck = checkBudget;
         }
 
-        public RWQTask(Operation op, QueryDoneCallback callback){
+        public RWQTask(Operation op, QueryDoneCallback callback, boolean checkBudget){
             callbackType = CallbackType.QUERY;
             operation = op;
             queryCallback = callback;
+            budgetCheck = checkBudget;
         }
 
         public CallbackType getCallbackType(){
@@ -126,29 +131,101 @@ public class ReadWriteQueryScheduler{
                 try {
                     switch(callbackType){
                         case READ:
-                            ApplicationObject object = server.doRead(operation);
-                            readCallback.readDone(object);
-                            if(object!=null)
-                                cache.updateEntry(object);
-                            return;
+                            if(!budgetCheck){
+                                //do it if budget there are no budget concerns
+                                ApplicationObject object = server.doRead(operation);
+                                readCallback.readDone(object);
+                                if(object!=null)
+                                    cache.updateEntry(object);
+                                return;
+                            } else {
+                                //check your budget before sending, don't send until you can afford to
+                                boolean inCache = cache.contains(objectName);
+                                boolean canAfford = false;
+                                if(inCache)
+                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+                                else
+                                    canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+                                if(canAfford){
+                                    ApplicationObject object = server.doRead(operation);
+                                    readCallback.readDone(object);
+                                    if(object!=null)
+                                        cache.updateEntry(object);
+                                    return;
+                                }
+                            }
                         case WRITE:
-                            ApplicationObject object = server.doWrite(operation);
-                            writeCallback.writeDone(object);
-                            if(object!=null)
-                                cache.updateEntry(object);
-                            return;
+                            if(!budgetCheck){
+                                //do it if budget there are no budget concerns
+                                ApplicationObject object = server.doWrite(operation);
+                                writeCallback.writeDone(object);
+                                if(object!=null)
+                                    cache.updateEntry(object);
+                                return;
+                            } else {
+                                //check your budget before sending, don't send until you can afford to
+                                boolean inCache = cache.contains(objectName);
+                                boolean canAfford = false;
+                                if(inCache)
+                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+                                else
+                                    canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+                                if(canAfford){
+                                    ApplicationObject object = server.doWrite(operation);
+                                    writeCallback.writeDone(object);
+                                    if(object!=null)
+                                        cache.updateEntry(object);
+                                    return;
+                                }
+                            }
                         case WRITE_EXPRESSION:
-                            ApplicationObject[] objects = server.doWrite(exp);
-                            writeCallback.writeDone(objects);
-                            if(objects!=null)
-                                cache.updateEntries(objects);
-                            return;
+                            if(!budgetCheck){
+                                //do it if budget there are no budget concerns
+                                ApplicationObject[] objects = server.doWrite(exp);
+                                writeCallback.writeDone(objects);
+                                if(objects!=null)
+                                    cache.updateEntries(objects);
+                                return;
+                            } else {
+                                //check your budget before sending, don't send until you can afford to
+                                boolean inCache = cache.contains(objectName);
+                                boolean canAfford = false;
+                                if(inCache)
+                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+                                else
+                                    canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+                                if(canAfford){
+                                    ApplicationObject[] objects = server.doWrite(exp);
+                                    writeCallback.writeDone(objects);
+                                    if(objects!=null)
+                                        cache.updateEntries(objects);
+                                    return;   
+                                }
+                            }
                         case QUERY:
-                            ApplicationObject queryRes = server.doQuery(operation)
-                            queryCallback.queryDone(queryRes);
-                            if(queryRes!=null)
-                                cache.updatEntry(queryRes);
-                            return;
+                            if(!budgetCheck){
+                                //do it if budget there are no budget concerns
+                                ApplicationObject queryRes = server.doQuery(operation)
+                                queryCallback.queryDone(queryRes);
+                                if(queryRes!=null)
+                                    cache.updatEntry(queryRes);
+                                return;
+                            } else {
+                                //check your budget before sending, don't send until you can afford to
+                                boolean inCache = cache.contains(objectName);
+                                boolean canAfford = false;
+                                if(inCache)
+                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+                                else
+                                    canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+                                if(canAfford){
+                                    ApplicationObject queryRes = server.doQuery(operation)
+                                    queryCallback.queryDone(queryRes);
+                                    if(queryRes!=null)
+                                        cache.updatEntry(queryRes);
+                                    return;
+                                }
+                            }
                     }
                 } catch(Exception e){
                     localSleep();

@@ -33,6 +33,12 @@ public class SFSApplicationServer implements ApplicationServer {
                 url= tokenizer.nextToken();
                 JSONObject info = new JSONObject(CurlOps.get(url));
                 obj = new SFSApplicationObject(objectName, info);
+            } else if(objectName.getStringName().startsWith("tag:")){
+                StringTokenizer tokenizer = new StringTokenizer(objectName.getStringName(), ":");
+                String url = tokenizer.nextToken();
+                url= tokenizer.nextToken();
+                String infoStr = CurlOps.get(url);
+                obj = new SFSApplicationObject(objectName, infoStr);
             } else{
                 JSONObject info = new JSONObject(CurlOps.get(host + objectName.getStringName()));
                 obj = new SFSApplicationObject(objectName, info);

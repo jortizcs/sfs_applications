@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 //import android.telephony.TelephonyManager;
 //import android.net.wifi.WifiInfo;
 
-public class EnergyCosts {
+public class EnergyBudgeter {
 
     private static ConcurrentHashMap<ObjectName, Double> fetchSizeMap = null;
     private static ConcurrentHashMap<String, Integer> netAvail = null;
@@ -31,9 +31,12 @@ public class EnergyCosts {
 
     private static final double alpha = 0.8; //how much weight to give to the latest reading
 
+    private static double enerygBudget = -1; //in joules
+    private static double drainRate = 0; //in joules
+
     public String[] netTypeStrs = {"wifi", "gprs", "edge", "hdspa", "lte"};
 
-    private EnergyCosts(){
+    private EnergyBudgeter(){
         fetchSizeMap = new ConcurrentHashMap<ObjectName, Double>();
         netAvail = new ConcurrentHashMap<String, Integer>();
 
@@ -47,6 +50,34 @@ public class EnergyCosts {
         bwAvail.put("edge", new Double(EDGE_BW));
         bwAvail.put("hdspa", new Double(THREEG_BW));
         bwAvail.put("lte", new Double(HDSPA_BW));
+
+        //set the energy budget
+        energyBudget = 325; //same as experiment in informed mobile prefetching
+    }
+
+    public EnergyBudgeter getInstance(){
+        if(costs==null)
+            costs = new EnergyBudgeter();
+        
+    }
+
+    public boolean canAfford(int size_in_bytes){
+
+        //get current battery level
+        /*
+       IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+       Intent batteryStatus = context.registerReceiver(null, ifilter);
+       // Are we charging / charged?
+       int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+       
+       boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+
+        int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        float batteryPct = level / (float)scale;
+       */
+        return true;
     }
 
     public double getCost(ObjectName name, int size_in_bytes, ConnectionType type){

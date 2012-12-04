@@ -12,6 +12,9 @@ public class ApplicationObjectCache {
     private static ConcurrentHashMap<Date, ArrayList<ApplicationObject>> reverseCacheMap = null;
     private static ApplicationObjectCache cache = null; 
 
+    public static int AVG_OBJ_SIZE = 0;
+    public static int NUM_OBJ_SEEN = 0;
+
     private ApplicationObjectCache(int sizeInBytes){
         maxCacheSize = sizeInBytes;
 
@@ -34,7 +37,7 @@ public class ApplicationObjectCache {
             updateEntry(objects[i]);
     }
 
-    public synchronized boolean updateEntry(ApplicationObject object){
+    public synchronized void updateEntry(ApplicationObject object){
         if(cacheMap.containsKey(object))
 
             //update the map
@@ -52,6 +55,7 @@ public class ApplicationObjectCache {
 
             l.add(object);
             reverseCacheMap.replace(d, l);
+
         }
         else{
             int newsize = object.getBytes().length + 8;
@@ -94,6 +98,8 @@ public class ApplicationObjectCache {
                 cacheSize+=newSize;
             }
         }
+
+        AVG_OBJ_SIZE = (AVG_OBJ_SIZE+object.getBytes().length)/NUM_OBJ_SEEN;
     }
 
     private void remove(int sizeBytes){

@@ -20,7 +20,9 @@ public interface Operation {
      */
     public int getOperator();
 
-    public ObjectName[] getObjectParams();
+    public ObjectName[] getObjectParamNames();
+
+    public ApplicationObject[] getObjectsParams();
 
     public byte[] getData();
 

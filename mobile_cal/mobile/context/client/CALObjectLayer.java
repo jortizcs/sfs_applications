@@ -9,6 +9,7 @@ public abstract class CALObjectLayer{
     private static ApplicationObjectCache cache = null;
     private static ReadWriteQueryScheduler scheduler = null;
     private static NetAccessThread netAccessThread = null;
+    private static EnergyBudgeter budgeter = null;
 
     /**
      * Instantiate the CALObjectLayer;
@@ -78,7 +79,7 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle read(ObjectName objectName, ReadDoneCallback callback){
-        return scheduler.schedule(objectName, callback);
+        return scheduler.schedule(objectName, callback, false);
     }
 
     /**
@@ -90,6 +91,19 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject readEOP(ObjectName objectName){
+        boolean inCache = cache.contains(objectName);
+        boolean canAfford = false;
+        if(inCache)
+            canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+        else
+            canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+
+        if(canAfford){
+            return read(objectName);
+        } else if(inCache && !canAfford){
+            return cache.get(objectName);
+        }
+        return null;
     }
 
     /**
@@ -104,7 +118,24 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public abstract ApplicationObject readEOP(ObjectName objectName, long freshness);
+    public abstract ApplicationObject readEOP(ObjectName objectName, long freshness){
+        boolean inCache = cache.contains(objectName);
+        boolean canAfford = false;
+        if(inCache)
+            canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+        else
+            canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+
+
+        if(canAfford){
+            return read(objectName, freshness);
+        } else if(inCache && !canAfford){
+            appObject = cache.get(objectName);
+            if((System.currentTimeMillis()-cache.getLastUpdateTime(appObject).getTime())<=freshness)
+                return appObject;
+        }
+        return null;
+    }
 
     /**
      * Registers a callback that is called when the object referred to by objectName is attained from the server
@@ -115,6 +146,19 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle readEOP(ObjectName objectName, ReadDoneCallback callback){
+        boolean inCache = cache.contains(objectName);
+        boolean canAfford = false;
+        if(inCache)
+            canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+        else
+            canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
+
+
+        if(canAfford){
+            return read(objectName);
+        } else if(inCache && !canAfford){
+            return cache.get(objectName);
+        }
         return null;
     }
 
