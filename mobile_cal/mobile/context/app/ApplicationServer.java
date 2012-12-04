@@ -9,7 +9,7 @@ public interface ApplicationServer{
 
     public ApplicationObject[] doWriteExpession(Expression exp) throws Exception;
 
-    public byte[] doQuery(String queryString) throws Exception;
+    public ApplicationObject doQuery(String queryString) throws Exception;
 
     public boolean isUp();
 }

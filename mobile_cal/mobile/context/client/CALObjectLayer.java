@@ -173,19 +173,18 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject[] write(ObjectName[] objectName, byte[] data, Operation op ){
+        ApplicationObject[] xformedObjects = null;
         if(op!=null && objectName.length>0){
             op.setParams(objectNames);
             op.setData(data);
             try {
-                ApplicationObject[] xformedObjects = server.doWrite(op);
+                xformedObjects = server.doWrite(op);
             } catch(Exception e){
                 return op.executeLocal();
             }
-            if(xformedObjects==null)
-                return op.executeLocal();
             return xformedObjects;
         }
-        return null;
+        return xformedObjects;
     }
 
     /**
@@ -361,7 +360,15 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject[] write(Expression e){
-        return null;
+        ApplicationObject[] xformedObjects=null;
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
+            try {
+                xformedObjects = server.doWriteExpression(e);
+            } catch(Exception ex){
+                return e.executeLocal();
+            }
+        }
+        return xformedObjects;
     }
 
     /**
@@ -377,6 +384,34 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject[] write(Expression e, long freshness){
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
+            Operation[] operations = e.getOpertions();
+            int objCnt = 0;
+            int totalObjCnt = 0;
+            for(int i=0; i<operations.length; i++){
+                Operation thisOp = operations[i];
+                ObjectName[] objectNames = thisOp.getParamNames();
+                if(thisOp!=null && objectNames!=null && objectNames.length>0){
+                    for(int j=0; j<objectNames.length; j++){
+                        totalObjCnt +=1;
+                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.get(objectNames[j]).getLastUpdateTime().getTime())<=freshness)
+                            objCnt +=1;
+                    }
+                }
+            }
+
+            //if all the objects are in cache and they're all fresh then execute it locally
+            //and have the synchronizer flush it to the server later
+            if(objCnt == totalObjCnt){
+                return e.executeLocal();
+            } else {
+                try {
+                    return server.doWriteExpression(e);
+                } catch(Exception ex){
+                    //couldn't contact the server, ignore it and return null
+                }
+            }
+        }
         return null;
     }
 
@@ -389,6 +424,8 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle write(Expression e, WriteDoneCallback callback){
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0)
+            return server.schedule(e, callback, false);
         return null;
     }
 
@@ -403,6 +440,38 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject[] writeEOP(Expression e){
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
+            Operation[] operations = e.getOpertions();
+            int objCnt = 0;
+            int totalObjCnt = 0;
+            int totalReqSize = 0;
+            for(int i=0; i<operations.length; i++){
+                Operation thisOp = operations[i];
+                ObjectName[] objectNames = thisOp.getParamNames();
+                if(thisOp!=null && objectNames!=null && objectNames.length>0){
+                    for(int j=0; j<objectNames.length; j++){
+                        totalObjCnt +=1;
+                        if(cache.contains(objectNames[j])){
+                            totalReqSize += cache.get(objectNames[j]).getBytes().length;
+                            objCnt +=1;
+                        } else {
+                            totalReqSize += ApplicationObjectCache.AVG_OBJ_SIZE;
+                        }
+                    }
+                }
+            }
+
+            if(budgeter.canAfford(totalReqSize)){
+                try {
+                    return server.doWriteExpression(e);
+                } catch(Exception ex){
+                    if(objCnt == totalObjCnt)
+                        return e.executeLocal();
+                }
+            } else if(objCnt == totalObjCnt){
+                return e.executeLocal();
+            }
+        }
         return null;
     }
 
@@ -419,6 +488,39 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject[] writeEOP(Expression e, long freshness){
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
+            Operation[] operations = e.getOpertions();
+            int objCnt = 0;
+            int totalObjCnt = 0;
+            int totalReqSize = 0;
+            for(int i=0; i<operations.length; i++){
+                Operation thisOp = operations[i];
+                ObjectName[] objectNames = thisOp.getParamNames();
+                if(thisOp!=null && objectNames!=null && objectNames.length>0){
+                    for(int j=0; j<objectNames.length; j++){
+                        totalObjCnt +=1;
+                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.get(objectNames[j]).getLastUpdateTime().getTime())<=freshness ){
+                            totalReqSize += cache.get(objectNames[j]).getBytes().length;
+                            objCnt +=1;
+                        } else {
+                            totalReqSize += ApplicationObjectCache.AVG_OBJ_SIZE;
+                        }
+                    }
+                }
+            }
+
+            if(budgeter.canAfford(totalReqSize)){
+                try {
+                    return server.doWriteExpression(e);
+                } catch(Exception ex){
+                    if(objCnt == totalObjCnt)
+                        return e.executeLocal();
+                }
+            } else if(objCnt == totalObjCnt){
+                return e.executeLocal();
+            }
+                    
+        }
         return null;
     }
 
@@ -431,6 +533,8 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle writeEOP(Expression e, WriteDoneCallback callback){
+        if(e!=null && e.getOperations()!=null && e.getOperations().length>0)
+            return server.schedule(e, callback, true);
         return null;
     }
 

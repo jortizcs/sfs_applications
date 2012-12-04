@@ -24,14 +24,6 @@ public abstract class Expression {
         return true;
     }
 
-    public void execute(){
-    }
-
-    public ApplicationObject execute(long freshness){
-        return null;
-    }
-
-    public CallbackHandle execute(WriteDoneCallback callback){
-        return null;
+    public synchronized void executeLocal(){
     }
 }
