@@ -1,5 +1,6 @@
 package mobile.context.client;
 
+import mobile.context.app.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -27,18 +28,18 @@ public class ApplicationObjectCache {
         if(sizeInBytes>0 && cache ==null)
             cache = new ApplicationObjectCache(sizeInBytes);
         else if(sizeInBytes<=0 && cache == null)
-            cache = new ApplicatoinObjectCache(1073741824/*1GB*/);
+            cache = new ApplicationObjectCache(1073741824/*1GB*/);
         return cache;
 
     }
 
-    public synchronized boolean updateEntries(ApplicationObject[] objects){
+    public synchronized void updateEntries(ApplicationObject[] objects){
         for(int i=0; i<objects.length; i++)
             updateEntry(objects[i]);
     }
 
     public synchronized void updateEntry(ApplicationObject object){
-        if(cacheMap.containsKey(object))
+        if(cacheMap.containsKey(object)){
 
             //update the map
             Date oldDate = cacheMap.get(object);
@@ -58,7 +59,7 @@ public class ApplicationObjectCache {
 
         }
         else{
-            int newsize = object.getBytes().length + 8;
+            int newSize = object.getBytes().length + 8;
             if(cacheSize+newSize<=maxCacheSize){
 
                 //put it in the lookup map
@@ -143,6 +144,7 @@ public class ApplicationObjectCache {
     }
 
     public ApplicationObject get(ObjectName objectName){
-        return nameCacheMap.get(name);
+        return (ApplicationObject)nameCacheMap.get(objectName);
     }
+
 }

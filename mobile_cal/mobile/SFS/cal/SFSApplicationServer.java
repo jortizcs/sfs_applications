@@ -59,7 +59,7 @@ public class SFSApplicationServer implements ApplicationServer {
             else if(e instanceof IOException)
                 throw new Exception("Connection problem");
         }
-        return return false;
+        return false;
     }
 
     public boolean isUp(){
@@ -123,7 +123,7 @@ public class SFSApplicationServer implements ApplicationServer {
         return addNode(op, "Item");
     }
 
-    private ApplicationObject.addSpace(Operation op){
+    private ApplicationObject addSpace(Operation op){
         return addNode(op, "Space");
     }
 

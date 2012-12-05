@@ -1,16 +1,17 @@
-package mobile.client;
+package mobile.context.client;
 
+import mobile.context.app.*;
 import java.util.*;
-import mobile.context.msg.OpLogDumpMessageProto;
-import mobile.context.msg.OpLogDumpMessageProto.OpLogDumpMessage;
+//import mobile.context.msg.OpLogDumpMessageProto;
+//import mobile.context.msg.OpLogDumpMessageProto.OpLogDumpMessage;
 
 
 public class OpLog{
-    private ArrayList<OpEntry> oplogBuffer = null;
+    private ArrayList<OpLogEntry> oplogBuffer = null;
     private static OpLog oplog = null;
 
     private OpLog(){
-        oplogBuffer = new ArrayList<OpEntry>();
+        oplogBuffer = new ArrayList<OpLogEntry>();
     }
 
     public OpLog getInstance(){
@@ -20,7 +21,7 @@ public class OpLog{
     }
 
     public void addEntry(ApplicationObject object, Operation op){
-        OpLogEntry entry = new OpLogEntry(object, op, System.getTimeMillis());
+        OpLogEntry entry = new OpLogEntry(object, op, System.currentTimeMillis());
         oplogBuffer.add(entry);
     }
 
@@ -33,7 +34,7 @@ public class OpLog{
         public Operation op = null;
         public long timestamp = -1L;
 
-        public OpLogEntry (ApplicationObj appObj, Operation o, long ts){
+        public OpLogEntry (ApplicationObject appObj, Operation o, long ts){
             object = appObj;
             op = o;
             timestamp = ts;

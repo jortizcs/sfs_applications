@@ -1,14 +1,16 @@
+package mobile.context.client;
+
 import java.util.*;
 import java.util.concurrent.*;
 
 public class Prefetcher{
     private static Prefetcher prefetcher = null;
-    private static ConcurrentHashMap<PrefetchDoneEventHandler> eventHandlers = null;
+    private static ArrayList<PrefetchDoneEventHandler> eventHandlers = null;
     private static long T = -1L; //period (T)
     private static Timer t = null;
 
     private Prefetcher(){
-        eventHandlers = new ConcurrentHashMap<PrefetchDoneEventHandler>();
+        eventHandlers = new ArrayList<PrefetchDoneEventHandler>();
         t = new Timer();
     }
 
@@ -27,13 +29,14 @@ public class Prefetcher{
         }
     }
 
-    public int setPrefetchDoneEventHandler(PrefetchDoneEventHandler handler){
+    public int setPrefetcherDoneEventHandler(PrefetchDoneEventHandler handler){
+        return 0;
     }
 
     public class PrefetchTask extends TimerTask{
         public PrefetchTask(){}
 
-        public run(){
+        public void run(){
             //prefetch algorithm runs here
         }
     }

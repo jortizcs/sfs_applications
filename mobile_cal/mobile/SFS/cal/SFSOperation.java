@@ -162,10 +162,10 @@ public class SFSOperation implements Operation{
                 append(" -> ").append(destPath);
             if(!children.contains(newChildName)){
                 children.add(newChildName.toString());
-                parentInfo.replace("children", children);
-                parentObj.updateEntry(parentObj);
-                cache.updateEntry(parentObj);
-                updatedObjs.add(parentObj);
+                sourceInfo.replace("children", children);
+                sourceObj.setInfo(sourceInfo);
+                cache.updateEntry(sourceObj);
+                updatedObjs.add(sourceObj);
                 return updateObjs.toArray();
             }
         }
