@@ -12,6 +12,7 @@ public class ReadWriteQueryScheduler{
 
     private static ExecutorService executorService = null;
     private static boolean isConnected = false;
+    private static EnergyBudgeter budgeter = null;
 
     enum CallbackType {
         READ,WRITE,WRITE_EXPRESSION
@@ -22,6 +23,7 @@ public class ReadWriteQueryScheduler{
         executorService = Executors.newCachedThreadPool();
         cache = ApplicationObjectCache.getInstance(0/*uses default cache size*/);
         setupConnectionInfo();
+        budgeter = EnergyBudgeter.getInstance();
     }
 
     public static ReadWriteQueryScheduler getInstance(ApplicationServer s){
@@ -36,7 +38,7 @@ public class ReadWriteQueryScheduler{
 
     public synchronized CallbackHandle schedule(ObjectName objectName, ReadDoneCallback callback, boolean checkBudget, boolean cacheResult){
         try {
-            RWQTask task = new RWQTask(objectName, callback, checkBudget, boolean cacheResult);
+            RWQTask task = new RWQTask(objectName, callback, checkBudget, cacheResult);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -57,7 +59,7 @@ public class ReadWriteQueryScheduler{
 
     public synchronized CallbackHandle schedule(Expression exp, WriteDoneCallback callback, boolean checkBudget){
         try {
-            RWQTask task = new RWQTask(expression, callback, checkBudget);
+            RWQTask task = new RWQTask(exp, callback, checkBudget);
             Future<?> future = executorService.submit(task);
             CallbackHandle h = new CallbackHandle(future);
             return h;
@@ -66,12 +68,12 @@ public class ReadWriteQueryScheduler{
     }
 
     private void setupConnectionInfo(){
-        isConnected = CALObjectLayer.appServerIsUp;
-        CALObjectLayer.registerOnConnStateChange(new OnConnStateChangeCallback(){
+        //isConnected = CALObjectLayer.appServerIsUp;
+        /*CALObjectLayer.registerOnConnStateChange(new OnConnStateChangeCallback(){
             public void stateChange(boolean up){
                 isConnected = up;
             }
-        });
+        });*/
     }
 
     public class RWQTask implements Runnable{
@@ -127,10 +129,10 @@ public class ReadWriteQueryScheduler{
                                 return;
                             } else {
                                 //check your budget before sending, don't send until you can afford to
-                                boolean inCache = cache.contains(objectName);
+                                boolean inCache = cache.contains(objName);
                                 boolean canAfford = false;
                                 if(inCache)
-                                    canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
+                                    canAfford = budgeter.canAfford(cache.get(objName).getBytes().length);
                                 else
                                     canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
                                 if(canAfford){
@@ -147,14 +149,14 @@ public class ReadWriteQueryScheduler{
                                 //do it if budget there are no budget concerns
                                 ApplicationObject[] objects = server.doWrite(operation);
                                 writeCallback.writeDone(objects);
-                                if(object!=null)
+                                if(objects!=null)
                                     cache.updateEntries(objects);
                                 return;
                             } else {
                                 //check your budget before sending, don't send until you can afford to
-                                ApplicationObject[] objectNames = operation.getObjectParamNames();
+                                ObjectName[] objectNames = operation.getObjectParamNames();
                                 int totalObjSize = 0;
-                                if(objectsNames!=null && objectNames.length>0){
+                                if(objectNames!=null && objectNames.length>0){
                                     int appObjCnt =0;
                                     for(int i=0; i<objectNames.length; i++){
                                         ApplicationObject thisObj = cache.get(objectNames[i]);
@@ -167,10 +169,7 @@ public class ReadWriteQueryScheduler{
                                     }
                                 }
                                 boolean canAfford = false;
-                                if(inCache)
-                                    canAfford = budgeter.canAfford(totalObjSize);
-                                else
-                                    canAfford = budgeter.canAfford(totalObjSize);
+                                canAfford = budgeter.canAfford(totalObjSize);
                                 if(canAfford){
                                     ApplicationObject[] objects = server.doWrite(operation);
                                     writeCallback.writeDone(objects);
@@ -183,7 +182,7 @@ public class ReadWriteQueryScheduler{
                         case WRITE_EXPRESSION:
                             if(!budgetCheck){
                                 //do it if budget there are no budget concerns
-                                ApplicationObject[] objects = server.doWrite(exp);
+                                ApplicationObject[] objects = server.doWriteExpression(exp);
                                 writeCallback.writeDone(objects);
                                 if(objects!=null)
                                     cache.updateEntries(objects);
@@ -194,8 +193,8 @@ public class ReadWriteQueryScheduler{
                                 int totalObjSize = 0;
                                 for(int j=0; j<operations.length; j++){
                                     Operation thisOp = operations[j];
-                                    ApplicationObject[] objectNames = thisOp.getObjectParamNames();
-                                    if(objectsNames!=null && objectNames.length>0){
+                                    ObjectName[] objectNames = thisOp.getObjectParamNames();
+                                    if(objectNames!=null && objectNames.length>0){
                                         int appObjCnt =0;
                                         for(int i=0; i<objectNames.length; i++){
                                             ApplicationObject thisObj = cache.get(objectNames[i]);
@@ -209,12 +208,9 @@ public class ReadWriteQueryScheduler{
                                     }
                                 }
                                 boolean canAfford = false;
-                                if(inCache)
-                                    canAfford = budgeter.canAfford(totalObjSize);
-                                else
-                                    canAfford = budgeter.canAfford(totalObjSize);
+                                canAfford = budgeter.canAfford(totalObjSize);
                                 if(canAfford){
-                                    ApplicationObject[] objects = server.doWrite(exp);
+                                    ApplicationObject[] objects = server.doWriteExpression(exp);
                                     writeCallback.writeDone(objects);
                                     if(objects!=null)
                                         cache.updateEntries(objects);
@@ -232,8 +228,8 @@ public class ReadWriteQueryScheduler{
         private void localSleep(){
             try{
                 //to prevent an explosion of threads all trying to read from the network
-                int jitter = Random.nextInt();
-                Thread.sleep(CALObjectLayer.accessFrequency+1000+jitter); 
+                int jitter = (new Random()).nextInt();
+                //Thread.sleep(CALObjectLayer.accessFrequency+1000+jitter); 
             } catch(Exception e){
                 e.printStackTrace();
             }

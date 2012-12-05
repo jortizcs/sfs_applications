@@ -7,7 +7,7 @@ public interface ApplicationServer{
 
     public ApplicationObject[] doWrite(Operation op) throws Exception;
 
-    public ApplicationObject[] doWriteExpession(Expression exp) throws Exception;
+    public ApplicationObject[] doWriteExpression(Expression exp) throws Exception;
 
     public ApplicationObject doQuery(String queryString) throws Exception;
 

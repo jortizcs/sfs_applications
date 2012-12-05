@@ -31,10 +31,12 @@ public class EnergyBudgeter {
 
     private static final double alpha = 0.8; //how much weight to give to the latest reading
 
-    private static double enerygBudget = -1; //in joules
+    private static double energyBudget = -1; //in joules
     private static double drainRate = 0; //in joules
 
     public String[] netTypeStrs = {"wifi", "gprs", "edge", "hdspa", "lte"};
+
+    private static EnergyBudgeter costs = null;
 
     private EnergyBudgeter(){
         fetchSizeMap = new ConcurrentHashMap<ObjectName, Double>();
@@ -55,10 +57,10 @@ public class EnergyBudgeter {
         energyBudget = 325; //same as experiment in informed mobile prefetching
     }
 
-    public EnergyBudgeter getInstance(){
+    public static EnergyBudgeter getInstance(){
         if(costs==null)
             costs = new EnergyBudgeter();
-        
+        return costs;
     }
 
     public boolean canAfford(int size_in_bytes){

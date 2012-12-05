@@ -10,20 +10,13 @@ public abstract class Expression {
     public Expression(ObjectName[][] objectNames, byte[][] data, Operation[] op){
     }
 
-    public void addOperation(ObjectName[] name, byte[] data, Operation op){
-    }
+    public abstract void addOperation(ObjectName[] name, byte[] data, Operation op);
 
-    public void removeOperation(ObjectName[] name, Operation op){
-    }
+    public abstract void removeOperation(ObjectName[] name, Operation op);
 
-    public Operation[] getOperations(){
-        return null;
-    }
+    public abstract Operation[] getOperations();
 
-    public boolean containsOperation(Operation op, ObjectName name){
-        return true;
-    }
+    public abstract boolean containsOperation(Operation op, ObjectName name);
 
-    public synchronized void executeLocal(){
-    }
+    public abstract ApplicationObject[] executeLocal();
 }

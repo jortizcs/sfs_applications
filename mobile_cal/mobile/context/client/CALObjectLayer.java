@@ -2,10 +2,12 @@ package mobile.context.client;
 
 import mobile.context.app.*;
 
+import java.util.*;
+
 public abstract class CALObjectLayer{
 
     protected static ApplicationServer appServer = null;
-    protected static appServerIsUp = false;
+    protected static boolean appServerIsUp = false;
     private static ApplicationObjectCache cache = null;
     private static ReadWriteQueryScheduler scheduler = null;
     private static NetAccessThread netAccessThread = null;
@@ -17,7 +19,7 @@ public abstract class CALObjectLayer{
     public CALObjectLayer(ApplicationServer server){
         appServer = server;
         if(cache==null)
-            cache = ApplicationObject.getInstance(0 /*sizeInBytes, default is 1GB*/);
+            cache = ApplicationObjectCache.getInstance(0 /*sizeInBytes, default is 1GB*/);
         if(scheduler == null)
             scheduler = ReadWriteQueryScheduler.getInstance(appServer);
         if(netAccessThread == null){
@@ -34,13 +36,17 @@ public abstract class CALObjectLayer{
      *          when there is no local copy and the server is inaccessible.
      */
     public ApplicationObject read(ObjectName objectName, boolean cacheResult){
-        ApplicationObject thisObject = appServer.doRead(objectName);
-        if(thisObject == null && cache.contains(objectName)){
-            return cache.get(objectName);
-        } else if (cacheResult && thisObject!=null){
-            cache.updateEntry(thisObject);
+        try {
+            ApplicationObject thisObject = appServer.doRead(objectName);
+            if(thisObject == null && cache.contains(objectName)){
+                return cache.get(objectName);
+            } else if (cacheResult && thisObject!=null){
+                cache.updateEntry(thisObject);
+            }
+            return thisObject;
+        } catch(Exception e){
         }
-        return thisObject;
+        return null;
     }
 
     /**
@@ -55,16 +61,19 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public abstract ApplicationObject read(ObjectName objectName, long freshness, boolean cacheResult){
+    public ApplicationObject read(ObjectName objectName, long freshness, boolean cacheResult){
         ApplicationObject appObject = null;
         if(cache.contains(objectName)){
             appObject = cache.get(objectName);
             if((System.currentTimeMillis()-cache.getLastUpdateTime(appObject).getTime())<=freshness)
                 return appObject;
         } else {
-            appObject = appServer.doRead(objectName);
-            if(cacheResult && appObject!=null)
-                cache.updateEntry(appObject);
+            try {
+                appObject = appServer.doRead(objectName);
+                if(cacheResult && appObject!=null)
+                    cache.updateEntry(appObject);
+            } catch(Exception e){
+            }
         }
         return appObject;
     }
@@ -129,7 +138,7 @@ public abstract class CALObjectLayer{
         if(canAfford){
             return read(objectName, freshness, cacheResult);
         } else if(inCache && !canAfford){
-            appObject = cache.get(objectName);
+            ApplicationObject appObject = cache.get(objectName);
             if((System.currentTimeMillis()-cache.getLastUpdateTime(appObject).getTime())<=freshness)
                 return appObject;
         }
@@ -145,20 +154,7 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle readEOP(ObjectName objectName, ReadDoneCallback callback, boolean cacheResult){
-        boolean inCache = cache.contains(objectName);
-        boolean canAfford = false;
-        if(inCache)
-            canAfford = budgeter.canAfford(cache.get(objectName).getBytes().length);
-        else
-            canAfford = budgeter.canAfford(ApplicationObjectCache.AVG_OBJ_SIZE);
-
-
-        if(canAfford){
-            return read(objectName, cacheResult);
-        } else if(inCache && !canAfford){
-            return cache.get(objectName);
-        }
-        return null;
+        return scheduler.schedule(objectName, callback, true, cacheResult);
     }
 
     /**
@@ -171,13 +167,13 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject[] write(ObjectName[] objectName, byte[] data, Operation op ){
+    public ApplicationObject[] write(ObjectName[] objectNames, byte[] data, Operation op ){
         ApplicationObject[] xformedObjects = null;
-        if(op!=null && objectName.length>0){
+        if(op!=null && objectNames.length>0){
             op.setParams(objectNames);
             op.setData(data);
             try {
-                xformedObjects = server.doWrite(op);
+                xformedObjects = appServer.doWrite(op);
             } catch(Exception e){
                 return op.executeLocal();
             }
@@ -199,17 +195,39 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject[] write(ObjectName[] objectName, byte[] data, Operation op, long freshness){
-        if(op!=null && objectName.length>0){
+    public ApplicationObject[] write(ObjectName[] objectNames, byte[] data, Operation op, long freshness){
+        ApplicationObject[] xformedObjects=null;
+        boolean allFresh = true;
+        int appObjCnt =0;
+        if(op!=null && objectNames.length>0){
             op.setParams(objectNames);
             op.setData(data);
             try {
-                ApplicationObject[] xformedObjects = server.doWrite(op);
+                xformedObjects = appServer.doWrite(op);
             } catch(Exception e){
-                return op.executeLocal(freshness);
+                for(int i=0; i<objectNames.length; i++){
+                    ApplicationObject thisObj = cache.get(objectNames[i]);
+                    if(cache.contains(objectNames[i])){
+                        appObjCnt+=1;
+                        if(System.currentTimeMillis()-cache.getLastUpdateTime(thisObj).getTime()>freshness)
+                            allFresh = false;
+                    } 
+                }
+                if(allFresh && objectNames.length==appObjCnt)
+                    return op.executeLocal();
             }
-            if(xformedObjects==null)
-                return op.executeLocal(freshness);
+            if(xformedObjects==null){
+                for(int i=0; i<objectNames.length; i++){
+                    ApplicationObject thisObj = cache.get(objectNames[i]);
+                    if(cache.contains(objectNames[i])){
+                        appObjCnt+=1;
+                        if(System.currentTimeMillis()-cache.getLastUpdateTime(thisObj).getTime()>freshness)
+                            allFresh = false;
+                    } 
+                }
+                if(allFresh && objectNames.length==appObjCnt)
+                    return op.executeLocal();
+            }
             return xformedObjects;
         }
         return null;
@@ -228,7 +246,7 @@ public abstract class CALObjectLayer{
         if(objectNames!=null && objectNames.length>0){
             op.setParams(objectNames);
             op.setData(data);
-            return scheduler.schedule(op, callback);
+            return scheduler.schedule(op, callback, false);
         }
         return null;
     }
@@ -245,7 +263,7 @@ public abstract class CALObjectLayer{
      */
     public ApplicationObject[] writeEOP(ObjectName[] objectNames, byte[] data, Operation op){
         int totalObjSize = 0;
-        if(objectsNames!=null && objectNames.length>0){
+        if(objectNames!=null && objectNames.length>0){
 
             int appObjCnt =0;
             for(int i=0; i<objectNames.length; i++){
@@ -259,19 +277,16 @@ public abstract class CALObjectLayer{
             }
 
             boolean canAfford = false;
-            if(inCache)
-                canAfford = budgeter.canAfford(cache.get(totalObjSize);
-            else
-                canAfford = budgeter.canAfford(totalObjSize);
+            canAfford = budgeter.canAfford(totalObjSize);
             if(canAfford){
                 op.setParams(objectNames);
                 op.setData(data);
                 try {
-                    ApplicationObject[] modifiedObjects = server.doWrite(op);
+                    ApplicationObject[] modifiedObjects = appServer.doWrite(op);
                     return modifiedObjects;
                 } catch(Exception e){
                     if(appObjCnt==objectNames.length){
-                        return op.executeLocal(op);
+                        return op.executeLocal();
                     }
                 }
             }
@@ -292,10 +307,10 @@ public abstract class CALObjectLayer{
      *          object does not exist or that it does, but is not accessible.  ApplicationObject's are not accessible
      *          when there is no local copy and the server is inaccessible.
      */
-    public ApplicationObject writeEOP(ObjectName[] objectName, byte[] data, Operation op, long freshness){
+    public ApplicationObject[] writeEOP(ObjectName[] objectNames, byte[] data, Operation op, long freshness){
         int totalObjSize = 0;
         boolean allFresh = true;
-        if(objectsNames!=null && objectNames.length>0){
+        if(objectNames!=null && objectNames.length>0){
             int appObjCnt =0;
             for(int i=0; i<objectNames.length; i++){
                 ApplicationObject thisObj = cache.get(objectNames[i]);
@@ -310,19 +325,16 @@ public abstract class CALObjectLayer{
             }
 
             boolean canAfford = false;
-            if(inCache)
-                canAfford = budgeter.canAfford(cache.get(totalObjSize);
-            else
-                canAfford = budgeter.canAfford(totalObjSize);
+            canAfford = budgeter.canAfford(totalObjSize);
             if(canAfford){
                 op.setParams(objectNames);
                 op.setData(data);
                 try {
-                    ApplicationObject[] modifiedObjects = server.doWrite(op);
+                    ApplicationObject[] modifiedObjects = appServer.doWrite(op);
                     return modifiedObjects;
                 } catch(Exception e){
                     if(appObjCnt==objectNames.length && allFresh){
-                        return op.executeLocal(op);
+                        return op.executeLocal();
                     }
                 }
             }
@@ -340,7 +352,7 @@ public abstract class CALObjectLayer{
      * @return CallbackHandle allows you to check the state of the callback and cancel the request if necessary.
      */
     public CallbackHandle writeEOP(ObjectName[] objectNames, byte[] data, Operation op, WriteDoneCallback callback){
-        if(objectNames!=null && objectName.length>0){
+        if(objectNames!=null && objectNames.length>0){
             op.setParams(objectNames);
             op.setData(data);
             return scheduler.schedule(op, callback, true);
@@ -362,7 +374,7 @@ public abstract class CALObjectLayer{
         ApplicationObject[] xformedObjects=null;
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
             try {
-                xformedObjects = server.doWriteExpression(e);
+                xformedObjects = appServer.doWriteExpression(e);
             } catch(Exception ex){
                 return e.executeLocal();
             }
@@ -384,16 +396,16 @@ public abstract class CALObjectLayer{
      */
     public ApplicationObject[] write(Expression e, long freshness){
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
-            Operation[] operations = e.getOpertions();
+            Operation[] operations = e.getOperations();
             int objCnt = 0;
             int totalObjCnt = 0;
             for(int i=0; i<operations.length; i++){
                 Operation thisOp = operations[i];
-                ObjectName[] objectNames = thisOp.getParamNames();
+                ObjectName[] objectNames = thisOp.getObjectParamNames();
                 if(thisOp!=null && objectNames!=null && objectNames.length>0){
                     for(int j=0; j<objectNames.length; j++){
                         totalObjCnt +=1;
-                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.get(objectNames[j]).getLastUpdateTime().getTime())<=freshness)
+                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.getLastUpdateTime(cache.get(objectNames[j])).getTime())<=freshness)
                             objCnt +=1;
                     }
                 }
@@ -405,7 +417,7 @@ public abstract class CALObjectLayer{
                 return e.executeLocal();
             } else {
                 try {
-                    return server.doWriteExpression(e);
+                    return appServer.doWriteExpression(e);
                 } catch(Exception ex){
                     //couldn't contact the server, ignore it and return null
                 }
@@ -424,7 +436,7 @@ public abstract class CALObjectLayer{
      */
     public CallbackHandle write(Expression e, WriteDoneCallback callback){
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0)
-            return server.schedule(e, callback, false);
+            return scheduler.schedule(e, callback, false);
         return null;
     }
 
@@ -440,13 +452,13 @@ public abstract class CALObjectLayer{
      */
     public ApplicationObject[] writeEOP(Expression e){
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
-            Operation[] operations = e.getOpertions();
+            Operation[] operations = e.getOperations();
             int objCnt = 0;
             int totalObjCnt = 0;
             int totalReqSize = 0;
             for(int i=0; i<operations.length; i++){
                 Operation thisOp = operations[i];
-                ObjectName[] objectNames = thisOp.getParamNames();
+                ObjectName[] objectNames = thisOp.getObjectParamNames();
                 if(thisOp!=null && objectNames!=null && objectNames.length>0){
                     for(int j=0; j<objectNames.length; j++){
                         totalObjCnt +=1;
@@ -462,7 +474,7 @@ public abstract class CALObjectLayer{
 
             if(budgeter.canAfford(totalReqSize)){
                 try {
-                    return server.doWriteExpression(e);
+                    return appServer.doWriteExpression(e);
                 } catch(Exception ex){
                     if(objCnt == totalObjCnt)
                         return e.executeLocal();
@@ -488,17 +500,17 @@ public abstract class CALObjectLayer{
      */
     public ApplicationObject[] writeEOP(Expression e, long freshness){
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0){
-            Operation[] operations = e.getOpertions();
+            Operation[] operations = e.getOperations();
             int objCnt = 0;
             int totalObjCnt = 0;
             int totalReqSize = 0;
             for(int i=0; i<operations.length; i++){
                 Operation thisOp = operations[i];
-                ObjectName[] objectNames = thisOp.getParamNames();
+                ObjectName[] objectNames = thisOp.getObjectParamNames();
                 if(thisOp!=null && objectNames!=null && objectNames.length>0){
                     for(int j=0; j<objectNames.length; j++){
                         totalObjCnt +=1;
-                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.get(objectNames[j]).getLastUpdateTime().getTime())<=freshness ){
+                        if(cache.contains(objectNames[j]) && (System.currentTimeMillis()-cache.getLastUpdateTime(cache.get(objectNames[j])).getTime())<=freshness ){
                             totalReqSize += cache.get(objectNames[j]).getBytes().length;
                             objCnt +=1;
                         } else {
@@ -510,7 +522,7 @@ public abstract class CALObjectLayer{
 
             if(budgeter.canAfford(totalReqSize)){
                 try {
-                    return server.doWriteExpression(e);
+                    return appServer.doWriteExpression(e);
                 } catch(Exception ex){
                     if(objCnt == totalObjCnt)
                         return e.executeLocal();
@@ -533,7 +545,7 @@ public abstract class CALObjectLayer{
      */
     public CallbackHandle writeEOP(Expression e, WriteDoneCallback callback){
         if(e!=null && e.getOperations()!=null && e.getOperations().length>0)
-            return server.schedule(e, callback, true);
+            return scheduler.schedule(e, callback, true);
         return null;
     }
 
@@ -543,7 +555,7 @@ public abstract class CALObjectLayer{
      * @returns true if connect, false otherwise.
      */
     public boolean getConnectionState(){
-        return netAccessThread.getNetAccessState();
+        return appServerIsUp;
     }
 
     /**
@@ -564,9 +576,9 @@ public abstract class CALObjectLayer{
         netAccessThread.unregister(callback);
     }
 
-    public class NetAccessThread implements Runnable{
-        private static ArrayList<OnConnStateChangeCallback> callbacks = null;
-        private static int freqSec = 60;
+    public class NetAccessThread extends Thread{
+        private ArrayList<OnConnStateChangeCallback> callbacks = null;
+        private int freqSec = 60;
         
         public NetAccessThread(){
             callbacks = new ArrayList<OnConnStateChangeCallback>();
@@ -587,13 +599,17 @@ public abstract class CALObjectLayer{
 
         public void run(){
             while(true){
-                boolean thisState = appServer.isUp();
-                if(thisState!=appServerIsUp){
-                    for(int i=0; i<callbacks.size(); i++)
-                        callbacks.get(i).stateChanged(thisState);
-                    appServerIsUp = thisState;
+                try {
+                    boolean thisState = appServer.isUp();
+                    if(thisState!=appServerIsUp){
+                        for(int i=0; i<callbacks.size(); i++)
+                            callbacks.get(i).stateChanged(thisState);
+                        appServerIsUp = thisState;
+                    }
+                    Thread.sleep(freqSec*1000);
+                } catch(Exception e){
+                    e.printStackTrace();
                 }
-                Thread.sleep(freqSec*1000);
             }
         }
 
