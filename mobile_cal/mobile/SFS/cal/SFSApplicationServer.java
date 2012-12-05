@@ -165,7 +165,7 @@ public class SFSApplicationServer implements ApplicationServer {
         return retObj;
     }
 
-    public String cleanPath(String path){
+    public static String cleanPath(String path){
         //clean up the path
         if(path == null)
             return null;
@@ -179,7 +179,7 @@ public class SFSApplicationServer implements ApplicationServer {
         return path;
     }
 
-    private String getFileNameWoPath(String path){
+    public static String getFileNameWoPath(String path){
         if(path==null || path.equals("") || path.equals("/"))
             return null;
         Vector<String> tokens = new Vector<String>();
@@ -189,7 +189,7 @@ public class SFSApplicationServer implements ApplicationServer {
         return tokens.lastElement();
     }
 
-    private String getParent(String path){
+    public static String getParent(String path){
         path = cleanPath(path);
         if(path==null || path == "/")
             return "/";
