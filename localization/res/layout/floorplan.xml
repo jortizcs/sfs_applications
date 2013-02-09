@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+  <LinearLayout
+      android:orientation="vertical"
+      android:id="@+id/ll1"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_weight="1">
+    
+        <LinearLayout
+      android:orientation="horizontal"
+      android:id="@+id/LabelLayout"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_weight="1">
+         <EditText
+        
+        android:id="@+id/Xlabel"
+        android:textSize="10pt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
+
+        <EditText
+        
+        android:id="@+id/Ylabel"
+        android:textSize="10pt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
+        
+        </LinearLayout>
+          <LinearLayout
+      android:orientation="vertical"
+      android:id="@+id/ButtonLayout"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_weight="1">
+    <Button android:text="Display Location" android:id="@+id/displayXY" android:layout_width="match_parent" android:layout_height="wrap_content"></Button>
+  	<Button android:text="Finalize Location" android:id="@+id/finalizeLocation" android:layout_width="match_parent" android:layout_height="wrap_content"></Button>
+  	</LinearLayout>
+  	</LinearLayout>
+  	
+  	<LinearLayout
+  	    android:id="@+id/ll2"
+      android:orientation="horizontal"
+      android:layout_width="500dp"
+      android:layout_height="500dp"
+      android:layout_weight="1">
+        </LinearLayout>
+      
+    
+  	
+</LinearLayout>
+
