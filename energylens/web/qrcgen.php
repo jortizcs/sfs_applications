@@ -1,59 +1,25 @@
-<html lang="en">
+<html>
   <head>
-    <meta charset="utf-8">
-    <title>Energy Lens Application</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="Jorge Ortiz" content="">
-
-    <!-- Le styles -->
-    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 1px;
-        padding-bottom: 1px;
-      }
-    </style>
-    <link href="lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
-
-    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- Le fav and touch icons -->
-    <link rel="shortcut icon" href="images/favicon.ico">
-    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+    <title>Energy Lens</title>
+    <link href="./style.css" rel="stylesheet" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" text="javascript/css"></script>
   </head>
 
   <body>
-
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-	  <a class="brand" href="http://streamfs.cs.berkeley.edu">StreamFS Apps</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-              <li class="active"><a href="index.php">Home</a></li>
-              <li><a href="http://www.eecs.berkeley.edu/~jortiz">About</a></li>
-              <li><a href="mailto:jortiz@cs.berkeley.edu">Contact</a></li>
-		
-            </ul>
-            <ul class="nav pull-right nav-pills">
-      	    <li><a class="btn btn-primary btn-large">CalNet Login</a></li>
-      	    </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-<br><br><br>
+  <aside id="masthead_bg"></aside>
+  <div id="wrap" class="clearfix">
+    <header id="masthead">
+      <nav>
+        <ul>
+          <li> <a href="#">Home</a></li>
+          <li>/ <a href="#">About</a></li>
+          <li>/ <a href="#">Grapher</a></li>
+          <li>/ <a href="#">Download</a></li>
+          <li>| <a href="#"> Login</a></li>
+        </ul>
+      </nav>
+      <img style="margin-top:20px;" src="./img/EL.png" alt="logo" title="logo"/>
+    </header>
 
 <?php
 include_once "lib/php/curl_ops.php";
@@ -77,7 +43,7 @@ for($i=0; $i<$max; $i++){
 	$t_tinyurl=get("http://tinyurl.com/api-create.php?url=".$thisurl);
 	array_push($urls,$t_tinyurl);
 	//echo "this_url=".$thisurl."\ttinyurl=".$t_tinyurl."\n\n";
-	QRcode::png($t_tinyurl, "qrcs/".$i.".png"); // creates code image and outputs it directly into browser
+	QRcode::png($t_tinyurl, "qrcs/".$i.".png"); // creates code image and outputs it into /qrcs
 }
 
 
@@ -92,7 +58,6 @@ while($i<$max){
 	for($j=0; $j<4; $j++){
 		$img=$i+$j;
 		$u = $urls[$img];
-		//echo "<td><img src=qrcs/".$img.".png"."><br><center>".$img."</center></td>";
 		echo "<td><center><img src=qrcs/".$img.".png"."></center><center><b>".$u."</b></center></td>";
 	}
 	echo "</tr>";
@@ -101,6 +66,7 @@ while($i<$max){
 echo "</table>";
 echo "</center>";
 
+echo "<a href=\"qrcgen_print.php?num=".$max."\" target=\"_blank\">Print-friendly version</a>"
 ?>
 
 </body>
